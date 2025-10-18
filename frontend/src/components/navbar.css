@@ -1,37 +1,104 @@
+/* ===== Sidebar Container ===== */
 .sidebar {
   height: 100vh;
-  width: 80px;
-  background-color: #1e293b;
+  width: 100px;
+  background-color: #0f172a;
   color: white;
   display: flex;
   flex-direction: column;
-  padding: 20px;
+  align-items: center; /* keeps everything centered horizontally */
   position: fixed;
   top: 0;
   left: 0;
+  transition: width 0.35s ease;
+  overflow: hidden;
 }
 
-.sidebar-title {
-  font-size: 1.3rem;
-  margin-bottom: 2rem;
+/* Expanded state */
+.sidebar.expanded {
+  width: 180px;
+}
+
+/* ===== Logo ===== */
+.logo {
+  width: 100%;
   text-align: center;
+  font-size: 1.3rem;
+  font-weight: bold;
+  margin: 1.5rem 0 2rem 0;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
+/* ===== Menu Section ===== */
 .sidebar-menu {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* icons centered horizontally */
   list-style: none;
   padding: 0;
+  margin: 0;
+  width: 100%;
+  transition: all 0.3s ease;
 }
 
+/* Menu items */
 .sidebar-menu li {
-  margin: 15px 0;
+  width: 100%;
+  display: flex;
+  justify-content: center; /* icons centered */
+  margin: 12px 0;
+  transition: transform 0.3s ease;
 }
 
+/* ===== Links ===== */
 .sidebar-menu a {
-  color: white;
+  display: flex;
+  align-items: center;
   text-decoration: none;
+  color: white;
   font-size: 1.1rem;
+  transition: background-color 0.25s ease;
+  padding: 8px;
+  border-radius: 8px;
+  width: 90%; /* makes hover background not touch edges */
+  justify-content: center; /* icons centered when collapsed */
+  overflow: hidden;
 }
 
 .sidebar-menu a:hover {
-  text-decoration: underline;
+  background-color: #1e293b;
+}
+
+/* ===== Icons ===== */
+.icon {
+  font-size: 2rem;
+  transition: transform 0.5s ease;
+}
+
+/* ===== Labels ===== */
+.label {
+  opacity: 0;
+  max-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  margin-left: 10px;
+  transition: opacity 0.5s ease, max-width 0.5s ease;
+}
+
+/* ===== Expanded State ===== */
+.sidebar.expanded .sidebar-menu a {
+  justify-content: flex-start; /* text + icon align left */
+  padding-left: 25px; /* subtle left indent */
+}
+
+.sidebar.expanded .label {
+  opacity: 1;
+  max-width: 200px; /* reveal text */
+}
+
+/* Optional smooth slide for icon group */
+.sidebar.expanded .icon {
+  transform: translateX(3px);
 }
