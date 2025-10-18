@@ -1,0 +1,180 @@
+/* Container */
+.chatbot-container {
+  width: 560px;
+  max-width: calc(100% - 40px);
+  margin: 24px auto;
+  padding: 24px;
+  border-radius: 14px;
+  background: #92c77b; /* green background like sample */
+  box-shadow: 0 6px 18px rgba(0,0,0,0.45);
+  color: #111;
+  position: relative;
+  font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+/* Header/title */
+.chatbot-container > h1 {
+  margin: 0 0 12px 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #0b2b16;
+}
+
+/* The input form sits visually above the chat box.
+   We position it absolute so you don't have to change JSX order. */
+.chatbot-container form {
+  position: absolute;
+  left: 24px;
+  right: 24px;
+  top: 24px; /* space from container top */
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 2;
+}
+
+/* User input bubble look */
+.chatbot-container form input[type="text"] {
+  -webkit-appearance: none;
+  appearance: none;
+  border: none;
+  outline: none;
+  background: #e8e8e8;              /* light gray bubble */
+  padding: 12px 18px;
+  border-radius: 999px;             /* pill shape */
+  box-shadow: none;
+  flex: 1;
+  font-size: 15px;
+  color: #111;
+  height: 44px;
+  position: relative;
+}
+
+/* little triangle marker on the right of the input (like a speech pointer) */
+.chatbot-container form input[type="text"]::after {
+  /* ::after is not supported on input; we use a separate pseudo element on the form */
+}
+
+/* add a small triangular icon using a pseudo element on the form container */
+.chatbot-container form::after {
+  content: "";
+  width: 0;
+  height: 0;
+  border-left: 9px solid transparent;
+  border-right: 0 solid transparent;
+  border-top: 9px solid transparent;
+  border-bottom: 9px solid transparent;
+  /* create triangle pointing down-right by using box shadow trick */
+  position: absolute;
+  right: 18px;
+  top: 50%;
+  transform: translateY(-50%) rotate(20deg);
+  filter: drop-shadow(0 1px 0 rgba(0,0,0,0.06));
+  /* We'll simulate a small green triangle matching the container edge by using a rotated square */
+  background: transparent;
+  pointer-events: none;
+}
+
+/* Instead of triangle shape with borders, add a small triangular marker element visually:
+   we use an inline SVG background so it works cross-browser. */
+.chatbot-container form::after {
+  background-image: url('data:image/svg+xml;utf8,\
+    <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\">\
+      <path fill=\"%23ffffff\" d=\"M2 20 L22 12 2 4 z\" transform=\"rotate(90 12 12) translate(0 -2)\"/>\
+    </svg>');
+  background-repeat: no-repeat;
+  background-position: center;
+  width: 18px;
+  height: 18px;
+  right: 66px; /* position near the end of input + before button */
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0.95;
+}
+
+/* Send button */
+.chatbot-container form button {
+  border: none;
+  background: #2b7f3a; /* darker green triangle/button */
+  color: white;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+}
+
+/* Chat window sits below the input. Add top margin to make room for the absolute-positioned form. */
+.chat-window {
+  margin-top: 24px; /* small spacing under the header */
+  padding: 22px;
+  border-radius: 12px;
+  background: #e9e9e9;   /* light gray body like the sample response area */
+  min-height: 220px;     /* make it large like the sample */
+  max-height: 420px;
+  overflow-y: auto;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);
+  margin-top: 92px;      /* leave space for the floating input (adjust if you change input height) */
+}
+
+/* Assistant response should be a single large rounded rectangle
+   no small bubble. We'll display all assistant text inside this card. */
+.chat-window .assistant-only {
+  background: transparent;
+  padding: 18px;
+  border-radius: 10px;
+  color: #111;
+  font-size: 15px;
+  line-height: 1.45;
+  box-shadow: none;
+}
+
+/* If you keep multiple messages, render them as blocks without bubble styling */
+.chat-window .chat-bubble {
+  display: block;
+  margin-bottom: 10px;
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+}
+
+/* If you still want to display a small "user bubble" in the chat window (mirroring the input),
+   keep this simple style — but per your request we won't show bubbles for assistant responses. */
+.chat-window .user {
+  display: inline-block;
+  background: #f1f1f1;
+  color: #111;
+  padding: 10px 14px;
+  border-radius: 18px;
+  max-width: 80%;
+  align-self: flex-end;
+}
+
+/* Slight responsiveness */
+@media (max-width: 520px) {
+  .chatbot-container {
+    padding: 16px;
+  }
+  .chat-window {
+    margin-top: 84px;
+    min-height: 180px;
+  }
+  .chatbot-container form {
+    left: 16px;
+    right: 16px;
+    top: 16px;
+  }
+}
+
+/* Small aesthetic adjustments for scrollbars (optional) */
+.chat-window::-webkit-scrollbar {
+  width: 8px;
+}
+.chat-window::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.15);
+  border-radius: 10px;
+}
