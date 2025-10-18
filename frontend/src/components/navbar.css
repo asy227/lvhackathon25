@@ -1,8 +1,17 @@
+
+/*Crisp Image*/
+img {
+  image-rendering: crisp-edges;
+  -webkit-optimize-contrast: optimize-contrast; /* helps on Safari */
+  object-fit: contain;
+}
+
+
 /* ===== Sidebar Container ===== */
 .sidebar {
   height: 100vh;
   width: 100px;
-  background-color: #0f172a;
+  background-color: #262626;
   color: white;
   display: flex;
   flex-direction: column;
@@ -10,13 +19,13 @@
   position: fixed;
   top: 0;
   left: 0;
-  transition: width 0.35s ease;
+  transition: width 0.35s ease-in-out;
   overflow: hidden;
 }
 
 /* Expanded state */
 .sidebar.expanded {
-  width: 180px;
+  width: 200px;
 }
 
 /* ===== Logo ===== */
@@ -68,14 +77,17 @@
 }
 
 .sidebar-menu a:hover {
-  background-color: #1e293b;
+  background-color: #354c42;
 }
 
 /* ===== Icons ===== */
 .icon {
   font-size: 2rem;
-  transition: transform 0.5s ease;
+  min-width: 40px; /* ensures consistent spacing */
+  text-align: center;
+  transition: transform 0.25s ease-in-out;
 }
+
 
 /* ===== Labels ===== */
 .label {
@@ -84,21 +96,111 @@
   overflow: hidden;
   white-space: nowrap;
   margin-left: 10px;
-  transition: opacity 0.5s ease, max-width 0.5s ease;
+  transition:
+    opacity 0.25s ease-out,
+    max-width 0.25s ease-out,
+    margin 0.25s ease-out;
+  flex-shrink: 0; /* prevent text from shrinking */
 }
 
 /* ===== Expanded State ===== */
 .sidebar.expanded .sidebar-menu a {
   justify-content: flex-start; /* text + icon align left */
-  padding-left: 25px; /* subtle left indent */
 }
 
 .sidebar.expanded .label {
+  text-overflow: ellipsis;
   opacity: 1;
-  max-width: 200px; /* reveal text */
+  overflow: hidden;
+  max-width: 140px;
+  transition:
+    opacity 0.25s ease-out,
+    max-width 0.25s ease-out,
+    margin 0.25s ease-out;
 }
 
 /* Optional smooth slide for icon group */
 .sidebar.expanded .icon {
+  transform: translateX(4px);
+  transition: transform 0.25s ease-out;
+
+}
+
+
+/* ===== Footer Section ===== */
+.sidebar-footer {
+  width: 100%;
+  padding: 10px 0;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+/* Position footer at bottom */
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; /* logo+menu on top, footer on bottom */
+  transition: width 0.35s ease-in-out;
+}
+
+/* Logout button styling */
+.logout-btn {
+  background: none;
+  border: none;
+  outline: none; 
+  color: white;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 90%;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: background-color 0.25s ease;
+}
+
+.logout-btn:focus {
+  outline: none; /* ensures it doesn’t come back on click */
+}
+.logout-btn:hover {
+  background-color: #354c42;
+}
+
+.sidebar.expanded .logout-btn {
+  justify-content: flex-start;
+  padding-left: 0px;
+}
+
+.sidebar.expanded .logout-btn .label {
+  opacity: 1;
+  max-width: 200px;
+}
+
+.logout-btn .icon {
+  font-size: 2rem;
+  transition: transform 0.3s ease;
+}
+
+.sidebar.expanded .logout-btn .icon {
   transform: translateX(3px);
 }
+
+.logout-icon {
+  width: 40px;  /* 🔥 controls size */
+  height: 40px; /* keep it square */
+  object-fit: contain; /* prevents stretching */
+  margin-right: 0; /* default: no margin */
+  margin-top: 5px;
+  transition: transform 0.3s ease;
+}
+
+/* Slight right shift when expanded */
+.sidebar.expanded .logout-icon {
+  margin-right: 10px;
+  transform: translateX(3px);
+}
+
+
+
