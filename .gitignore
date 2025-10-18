@@ -31,3 +31,6 @@ Thumbs.db
 # OS files
 ehthumbs.db
 Icon?
+
+#.env file for API keys and such
+.env
