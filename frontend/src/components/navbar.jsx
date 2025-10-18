@@ -21,7 +21,7 @@ export default function Navbar() {
         <li>
           <a href="#">
             <span className="icon">📅</span>
-            <span className="label">Schedule</span>
+            <span className="label">Dining Services</span>
           </a>
         </li>
         <li>
@@ -37,6 +37,14 @@ export default function Navbar() {
           </a>
         </li>
       </ul>
+
+        
+      <div className="sidebar-footer">
+      <button className="logout-btn">
+        <img src="../../imgs/logoutIcon.png" alt="Logout" className="logout-icon" />
+        <span className="label">Logout</span>
+      </button>
+    </div>
     </div>
   );
 }
