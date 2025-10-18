@@ -1,53 +1,130 @@
-const express = require('express');
-const cors = require('cors');
-const dotenv = require('dotenv');
-const { Pool } = require('pg');
+// ============================================================================================================
+// 1. Setting up Essential Backend Variables
+// ============================================================================================================
 
-dotenv.config();
-const app = express();
-const PORT = process.env.PORT || 3000;
+require('dotenv').config()  // Loads environment variables from the .env file into process.env
+const express = require('express')  // Core framework for building RESTful APIs in Node.js
+const cors = require('cors')  // Enables Cross-Origin Resource Sharing between frontend and backend
+const { Pool } = require('pg')  // PostgreSQL client for connecting and querying an RDS database
+
+const app = express()  // Creates an instance of the Express application
+const PORT = process.env.PORT || 3000  // Defines which port the backend listens on (default 3000)
 
 
 
-// Middleware
-app.use(cors());
-app.use(express.json()); // replaces body-parser for most use cases
 
-// Database connection pool
-const pool = new Pool ({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASS,
-    database: process.env.DB_NAME,
-    port: process.env.DB_PORT,
+
+
+
+
+
+
+
+
+// ============================================================================================================
+// 2. Middleware Configuration
+// ============================================================================================================
+
+app.use(cors())  // Allows frontend requests from different origins (e.g., React app on port 5173)
+app.use(express.json())  // Parses incoming JSON payloads from POST/PUT requests into req.body
+
+
+
+
+
+
+
+
+
+
+
+
+// ============================================================================================================
+// 3. Database Connection Pool (AWS RDS - PostgreSQL)
+// ============================================================================================================
+
+/**
+ * @description
+ * Creates a reusable connection pool to the PostgreSQL database hosted on AWS RDS.
+ * Using a pool improves performance by keeping open connections available instead of reconnecting each time.
+ * The `ssl` configuration is required for RDS instances and disables certificate verification for simplicity.
+ */
+const pool = new Pool({
+    host: process.env.DB_HOST,  // The hostname or endpoint of the RDS PostgreSQL instance
+    user: process.env.DB_USER,  // The PostgreSQL username stored in .env
+    password: process.env.DB_PASS,  // The PostgreSQL password stored in .env
+    database: process.env.DB_NAME,  // The name of the database to connect to
+    port: process.env.DB_PORT,  // The port used by PostgreSQL (default: 5432)
     ssl: {
-        rejectUnauthorized: false, // RDS requires SSL
-    },
-});
+        rejectUnauthorized: false  // Allows SSL without verifying AWS certificate chain
+    }
+})
 
-// Example test route
+
+
+
+
+
+
+
+
+
+
+
+// ============================================================================================================
+// 4. Defining Backend Routes
+// ============================================================================================================
+
+/**
+ * @route GET /
+ * @description Basic route that confirms the backend is running.
+ * Used for quick browser checks or EC2 uptime validation.
+ * @returns {HTML} A static confirmation message.
+ */
 app.get('/', (req, res) => {
-  res.send('<h1>NourishLU Backend Running</h1>');
-});
+    res.send('<h1>NourishLU Backend Running</h1>')  // Responds with a simple HTML message
+})
 
-// Database test route
+
+
+/**
+ * @route GET /api/db-test
+ * @description Tests connectivity to the PostgreSQL database by executing `SELECT NOW()`.
+ * This helps confirm that environment variables and RDS credentials are configured properly.
+ * @returns {JSON} Connection status and the current database server timestamp.
+ */
 app.get('/api/db-test', async (req, res) => {
     try {
-        const result = await pool.query('SELECT NOW()');
+        const result = await pool.query('SELECT NOW()')  // Executes a basic SQL query to fetch the current time
         res.json({
-            connected: true,
-            serverTime: result.rows[0].now,
-        });
-    }
+            connected: true,  // Indicates successful database connection
+            serverTime: result.rows[0].now  // Returns current PostgreSQL server timestamp
+        })
+    } 
     catch (err) {
-        console.error('Database connection error:', err);
+        console.error('Database connection error:', err)  // Logs error details for debugging
         res.status(500).json({
-            connected: false,
-            error: err.message,
-        });
+            connected: false,  // Indicates failure to connect
+            error: err.message  // Returns readable error message for frontend debugging
+        })
     }
-});
+})
+
+
+
+
+
+
+
+
+
+
+
+
+// ============================================================================================================
+// 5. Starting Backend Server
+// ============================================================================================================
 
 app.listen(PORT, () => {
-    console.log(`Server is listening at http://localhost:${PORT}`);
-});
+    console.log(`Server is listening at http://localhost:${PORT}`)  // Confirms that backend is live and listening
+})
