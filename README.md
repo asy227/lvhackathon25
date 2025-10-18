@@ -1,2 +1,2 @@
 # Lehigh Valley Hackathon 2025
-can add/change mroe later
+can add/change more later
