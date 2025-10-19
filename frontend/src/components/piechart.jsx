@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import './piechart.css';
 
-const piechart = () => {
+const PieChartComponent = () => {
     const [userData, setUserData] = useState({
         gender: 'male',
         age: '25',
@@ -18,6 +18,9 @@ const piechart = () => {
         fat: 67
     });
 
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+
     // Generate dropdown options
     const generateOptions = (start, end, unit = '') => {
         const options = [];
@@ -27,44 +30,58 @@ const piechart = () => {
         return options;
     };
 
-    // Calculate nutrient goals
-    const calculateNutrientGoals = (data) => {
-        const weight = parseInt(data.weight);
-        const height = parseInt(data.height);
-        const age = parseInt(data.age);
+    // Fetch nutrient goals from backend
+    const fetchNutrientGoals = async (userData) => {
+        setLoading(true);
+        setError(null);
+        
+        try {
+            const response = await fetch('http://localhost:3000/api/calculate-nutrition', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(userData)
+            });
 
-        // Basal Metabolic Rate (BMR)
-        let bmr;
-        if (data.gender === 'male') {
-            bmr = 10 * weight + 6.25 * height - 5 * age + 5;
-        } else {
-            bmr = 10 * weight + 6.25 * height - 5 * age - 161;
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            
+            // Map backend response to frontend state
+            setNutrientGoals({
+                calories: data.kcal,
+                protein: data.protein,
+                carbs: data.carbs,
+                fat: data.fat
+            });
+            
+        } catch (error) {
+            console.error('Error fetching nutrient goals:', error);
+            setError('Failed to connect to backend. Using default values.');
+            // You can keep the current values or set some fallbacks
+        } finally {
+            setLoading(false);
         }
-
-        // Activity level multipliers
-        const activityMultipliers = {
-            sedentary: 1.2,
-            light: 1.375,
-            moderate: 1.55,
-            active: 1.725,
-            very_active: 1.9
-        };
-
-        const tdee = bmr * activityMultipliers[data.activityLevel];
-        const calories = Math.round(tdee);
-        const proteinGrams = Math.round((calories * 0.25) / 4);
-        const fatGrams = Math.round((calories * 0.30) / 9);
-        const carbGrams = Math.round((calories * 0.45) / 4);
-
-        return { calories, protein: proteinGrams, carbs: carbGrams, fat: fatGrams };
     };
 
     const handleInputChange = (field, value) => {
-        const newData = { ...userData, [field]: value };
+        const newData = { 
+            ...userData, 
+            [field]: value 
+        };
         setUserData(newData);
-        const newGoals = calculateNutrientGoals(newData);
-        setNutrientGoals(newGoals);
+        
+        // Call backend API with new data
+        fetchNutrientGoals(newData);
     };
+
+    // Fetch initial data when component mounts
+    useEffect(() => {
+        fetchNutrientGoals(userData);
+    }, []);
 
     // Data for pie chart
     const pieData = [
@@ -88,6 +105,13 @@ const piechart = () => {
 
     return (
         <div className="piechart-container compact">
+            {/* Error Message */}
+            {error && (
+                <div className="error-message">
+                    {error}
+                </div>
+            )}
+
             {/* Compact Input Section */}
             <div className="compact-input-section">
                 <div className="input-row">
@@ -96,6 +120,7 @@ const piechart = () => {
                         <select 
                             value={userData.gender} 
                             onChange={(e) => handleInputChange('gender', e.target.value)}
+                            disabled={loading}
                         >
                             <option value="male">Male</option>
                             <option value="female">Female</option>
@@ -107,6 +132,7 @@ const piechart = () => {
                         <select 
                             value={userData.weight}
                             onChange={(e) => handleInputChange('weight', e.target.value)}
+                            disabled={loading}
                         >
                             {generateOptions(40, 200, ' kg')}
                         </select>
@@ -117,6 +143,7 @@ const piechart = () => {
                         <select 
                             value={userData.height}
                             onChange={(e) => handleInputChange('height', e.target.value)}
+                            disabled={loading}
                         >
                             {generateOptions(140, 220, ' cm')}
                         </select>
@@ -127,6 +154,7 @@ const piechart = () => {
                         <select 
                             value={userData.activityLevel} 
                             onChange={(e) => handleInputChange('activityLevel', e.target.value)}
+                            disabled={loading}
                         >
                             <option value="sedentary">Sedentary</option>
                             <option value="light">Light</option>
@@ -140,34 +168,44 @@ const piechart = () => {
 
             {/* Results Section */}
             <div className="compact-results">
-                <h3>Your daily recommended nutrition goals:</h3>
+                <h3>
+                    {loading ? 'Calculating...' : 'Your daily recommended nutrition goals:'}
+                </h3>
                 
                 <div className="goals-grid">
                     <div className="goal-card">
-                        <div className="goal-value">{nutrientGoals.calories}</div>
+                        <div className="goal-value">
+                            {loading ? '...' : nutrientGoals.calories}
+                        </div>
                         <div className="goal-label">kcal</div>
                     </div>
                     <div className="goal-card">
-                        <div className="goal-value">{nutrientGoals.fat}g</div>
+                        <div className="goal-value">
+                            {loading ? '...' : `${nutrientGoals.fat}g`}
+                        </div>
                         <div className="goal-label">Fat</div>
                     </div>
                     <div className="goal-card">
-                        <div className="goal-value">{nutrientGoals.protein}g</div>
+                        <div className="goal-value">
+                            {loading ? '...' : `${nutrientGoals.protein}g`}
+                        </div>
                         <div className="goal-label">Protein</div>
                     </div>
                     <div className="goal-card">
-                        <div className="goal-value">{nutrientGoals.carbs}g</div>
+                        <div className="goal-value">
+                            {loading ? '...' : `${nutrientGoals.carbs}g`}
+                        </div>
                         <div className="goal-label">Carb</div>
                     </div>
                 </div>
             </div>
 
-            {/* Pie Chart - More Compact */}
+            {/* Pie Chart */}
             <div className="compact-piechart">
                 <ResponsiveContainer width="100%" height={200}>
                     <PieChart>
                         <Pie
-                            data={pieData}
+                            data={loading ? [] : pieData} // Empty array when loading
                             cx="50%"
                             cy="50%"
                             labelLine={false}
@@ -185,9 +223,14 @@ const piechart = () => {
                         <Legend />
                     </PieChart>
                 </ResponsiveContainer>
+                {loading && (
+                    <div className="piechart-loading">
+                        Updating chart...
+                    </div>
+                )}
             </div>
         </div>
     );
 };
 
-export default piechart;
+export default PieChartComponent;
