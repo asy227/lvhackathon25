@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@aws-sdk/client-bedrock-runtime": "^3.913.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
   },
