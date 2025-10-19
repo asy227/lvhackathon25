@@ -53,14 +53,6 @@ export default function Navbar({ onExpandChange }) {
           </NavLink>
         </li>
       </ul>
-
-      {/* Footer Section (Logout) */}
-      <div className="sidebar-footer">
-        <button className="logout-btn">
-          <img src="/logouticon.png" alt="Logout" className="logout-icon" />
-          <span className="label">Logout</span>
-        </button>
-      </div>
     </div>
   );
 }
