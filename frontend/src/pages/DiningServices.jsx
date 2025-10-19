@@ -1,119 +1,114 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import "./DiningServices.css";
 
-const diningLocations = [
-  { name: "Rathbone Dining Hall", url: "https://lehigh.sodexomyway.com/en-us/locations/rathbone-dining-hall" },
-  { name: "The Grind @ FML", url: "https://lehigh.sodexomyway.com/en-us/locations/thegrind" },
-  { name: "Upper Court", url: "https://lehigh.sodexomyway.com/en-us/locations/uppercourt" },
-  { name: "The Cup", url: "https://lehigh.sodexomyway.com/en-us/locations/thecup" },
-];
-
 export default function DiningServices() {
-  const [selectedLocation, setSelectedLocation] = useState(null);
-  const [menu, setMenu] = useState([]);
-  const [showCalculator, setShowCalculator] = useState(false);
+  const [showGoals, setShowGoals] = useState(false);
+  const [selectedGoals, setSelectedGoals] = useState([]);
+  const [recommendations, setRecommendations] = useState([]);
 
-  // Mock menu data (can be replaced later with API data)
-  useEffect(() => {
-    if (selectedLocation) {
-      setMenu([
-        { item: "Grilled Chicken Sandwich", calories: 350, protein: 25, fat: 8 },
-        { item: "Garden Salad", calories: 120, protein: 4, fat: 2 },
-        { item: "Fruit Cup", calories: 90, protein: 1, fat: 0 },
-      ]);
+  const dietaryGoals = [
+    "High Protein",
+    "Low Protein",
+    "Vegetarian",
+    "Vegan",
+    "Low Cost",
+    "High Cost",
+    "Low Carb",
+    "High Carb",
+  ];
+
+  const toggleGoal = (goal) => {
+    if (selectedGoals.includes(goal)) {
+      setSelectedGoals(selectedGoals.filter((g) => g !== goal));
+    } else {
+      setSelectedGoals([...selectedGoals, goal]);
     }
-  }, [selectedLocation]);
+  };
+
+  const selectAll = () => {
+    setSelectedGoals(dietaryGoals);
+  };
+
+  const deselectAll = () => {
+    setSelectedGoals([]);
+  };
+
+  const handleShowRecommendations = () => {
+    // Placeholder mock data (backend connection later)
+    setRecommendations([
+      "Rathbone Dining Hall — Grilled Chicken Bowl",
+      "The Grind @ FML — Protein Smoothie",
+      "University Center — Leaf & Ladle Salad",
+      "The Health @ UC — Quinoa Power Bowl",
+      "Common Grounds — Oatmeal & Fruit Bar",
+    ]);
+  };
 
   return (
     <div className="dining-page">
-      <h1 className="dining-title">Dining Services</h1>
+      {/* LEFT SIDE: Controls */}
+      <div className="dining-left">
+        <h1 className="dining-title">Dining Services</h1>
 
-      {/* Dining location buttons */}
-      <div className="dining-locations">
-        {diningLocations.map((loc) => (
+        {/* Dietary Goals Dropdown */}
+        <div className="goals-section">
           <button
-            key={loc.name}
-            onClick={() => setSelectedLocation(loc.name)}
-            className={`location-btn ${selectedLocation === loc.name ? "active" : ""}`}
+            className="goals-dropdown-btn"
+            onClick={() => setShowGoals(!showGoals)}
           >
-            {loc.name}
+            Dietary Goals {showGoals ? "▲" : "▼"}
           </button>
-        ))}
+
+          {showGoals && (
+            <div className="goals-dropdown">
+              <p className="goal-toggle-text select-all" onClick={selectAll}>
+                Select All
+              </p>
+              <p className="goal-toggle-text deselect-all" onClick={deselectAll}>
+                Deselect All
+              </p>
+
+              {dietaryGoals.map((goal) => (
+                <label key={goal} className="goal-option">
+                  <input
+                    type="checkbox"
+                    checked={selectedGoals.includes(goal)}
+                    onChange={() => toggleGoal(goal)}
+                  />
+                  {goal}
+                </label>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Generate Recommendations */}
+        <button
+          className="show-recommendations-btn"
+          onClick={handleShowRecommendations}
+        >
+          Show Top 5 Choices
+        </button>
       </div>
 
-      {/* Menu for selected location */}
-      {selectedLocation && (
-        <div className="menu-section">
-          <h2 className="menu-title">Menu for {selectedLocation}</h2>
-          <ul className="menu-list">
-            {menu.map((m) => (
-              <li key={m.item}>
-                <strong>{m.item}</strong> — {m.calories} cal, {m.protein}g protein, {m.fat}g fat
+      {/* RIGHT SIDE: Recommendations */}
+      <div className="recommendations-section">
+        <h2 className="menu-title">Top 5 Dining Options</h2>
+        {recommendations.length === 0 ? (
+          <p className="placeholder-text">
+            Select your dietary goals and click “Show Top 5 Choices” to see
+            recommendations tailored for you.
+          </p>
+        ) : (
+          <ul className="recommendations-list">
+            {recommendations.map((rec, index) => (
+              <li key={index} className="recommendation-item">
+                {rec}
               </li>
             ))}
           </ul>
-        </div>
-      )}
-
-      {/* Nutrition Calculator */}
-      <div className="calculator-section">
-        <button
-          className="toggle-calculator-btn"
-          onClick={() => setShowCalculator(!showCalculator)}
-        >
-          {showCalculator ? "Hide Nutrition Calculator" : "Show Nutrition Calculator"}
-        </button>
-
-        {showCalculator && (
-          <div className="nutrition-calculator">
-            <h2 className="calculator-title">Nutrition Calculator</h2>
-            <p className="calculator-subtext">
-              Enter your meal details to estimate total nutrition.
-            </p>
-            <NutritionCalculator />
-          </div>
         )}
       </div>
-    </div>
-  );
-}
-
-// Sub-component for the calculator
-function NutritionCalculator() {
-  const [calories, setCalories] = useState("");
-  const [protein, setProtein] = useState("");
-  const [fat, setFat] = useState("");
-
-  const total = Number(calories) + Number(protein) * 4 + Number(fat) * 9;
-
-  return (
-    <div className="calculator">
-      <label>
-        Calories:
-        <input
-          type="number"
-          value={calories}
-          onChange={(e) => setCalories(e.target.value)}
-        />
-      </label>
-      <label>
-        Protein (g):
-        <input
-          type="number"
-          value={protein}
-          onChange={(e) => setProtein(e.target.value)}
-        />
-      </label>
-      <label>
-        Fat (g):
-        <input
-          type="number"
-          value={fat}
-          onChange={(e) => setFat(e.target.value)}
-        />
-      </label>
-
-      <p className="summary">Estimated Total: {total || 0} kcal</p>
     </div>
   );
 }
