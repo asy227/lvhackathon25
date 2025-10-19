@@ -7,6 +7,7 @@ require('dotenv').config();  //  Loads environment variables from the .env file
 const express = require('express');  //  Core framework for building RESTful APIs in Node.js
 const cors = require('cors');  //  Enables Cross-Origin Resource Sharing between frontend and backend
 const { Pool } = require('pg');  //  PostgreSQL client for connecting and querying an RDS database
+const path = require("path");
 
 //  --------------- Middleware Configuration ---------------
 const app = express();  //  Creates an instance of the Express application
@@ -67,9 +68,9 @@ const pool = new Pool({
 // ============================================================================================================
 
 //  --------------- Root Endpoint and Health Check Route ---------------
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/dist/index.html"));
-});
+// app.get("/", (req, res) => {
+//   res.sendFile(path.join(__dirname, "../frontend/dist/index.html"));
+// });
 
 /**
  * @route GET /api/health
@@ -451,8 +452,6 @@ app.post('/api/chat', async (req, res) => {
 // ============================================================================================================
 // 4. Serving Frontend Build and Starting Server
 // ============================================================================================================
-
-const path = require("path");
 
 // Serve static frontend assets
 app.use(express.static(path.join(__dirname, "../frontend/dist")));
