@@ -1,85 +1,87 @@
 // ============================================================================================================
-//  Chatbot Functions (Groq API Integration with Fallback Models)
+//  Chatbot Functions (Groq API Integration with Context + Fallback Models)
 // ============================================================================================================
 
 /**
  * @description
  * Handles all chatbot-related functionality for NourishLU.
- * This module sends text-generation requests to the Groq API
- * and includes a fallback system that automatically retries
- * with alternative models if one becomes unavailable.
+ * Adds contextual grounding to reduce hallucinations, while respecting Groq’s rate limits.
+ * Automatically retries with fallback models when the primary is unavailable.
  */
 
 // --------------- Environment and Dependencies ---------------
 require('dotenv').config();  //  Loads environment variables from the .env file
-
+const fetch = require('node-fetch');  //  Ensure fetch is available in Node.js
 
 // --------------- Configuration Variables ---------------
-const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';  //  Groq’s OpenAI-compatible chat endpoint
-const DEFAULT_MODEL = process.env.LLM_MODEL || 'llama-3.1-8b-instant';  //  Default model used for responses
-const API_KEY = process.env.GROQ_API_KEY;  //  Groq API key stored in .env
+const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
+const DEFAULT_MODEL = process.env.LLM_MODEL || 'llama-3.1-8b-instant';
+const API_KEY = process.env.GROQ_API_KEY;
 
-//  Fallback models in case the primary model is deprecated or unavailable
+//  Fallback models (for decommissioned or rate-limited models)
 const FALLBACK_MODELS = [
     'llama-3.1-70b-versatile',
     'mixtral-8x7b',
     'gemma2-9b-it'
 ];
 
-
+// --------------- Groq Rate Limit Notes ---------------
+/**
+ * llama-3.1-8b-instant → ~30 requests/minute | ~500k tokens/day
+ * Stay below 1 request every 2 seconds in production.
+ * Keep temperature and token count moderate to avoid quota waste.
+ */
 
 
 // ============================================================================================================
-//  Generate Chatbot Response (with Optional Model Parameter)
+//  Generate Chatbot Response (with Context + Optional Model Override)
 // ============================================================================================================
 
 /**
  * @function generateResponse
- * Sends a user message to the Groq API and retrieves the model’s generated response.
- * If a specific model is passed in, it uses that model; otherwise defaults to .env configuration.
- * @param {string} message  The text sent from the frontend user.
- * @param {string} [modelOverride]  Optional model name to override the default.
- * @returns {Promise<string>}  The generated model reply or a fallback message.
+ * Sends a user message to the Groq API and retrieves a context-aware, concise response.
+ * @param {string} message  User message from the frontend.
+ * @param {string} [modelOverride]  Optional override for model name.
+ * @returns {Promise<string>}  Model-generated reply.
  */
 async function generateResponse(message, modelOverride) {
-
-    //  Determine which model to use for this specific request
     const activeModel = modelOverride || DEFAULT_MODEL;
 
-    //  Helper function that sends a single API request to Groq
     async function sendRequest(modelName) {
         const response = await fetch(GROQ_URL, {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${API_KEY}`,  //  Authenticates the API request
-                'Content-Type': 'application/json'  //  Defines JSON payload type
+                'Authorization': `Bearer ${API_KEY}`,
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                model: modelName,  //  Model used for text generation
+                model: modelName,
                 messages: [
-                    { role: 'system', content: 'You are a concise, friendly assistant for Lehigh University students. Provide short, actionable nutrition and campus dining advice.' },
+                    {
+                        role: 'system',
+                        content:
+                            "You are NourishLU — a nutrition and campus dining assistant for Lehigh University. " +
+                            "Your job is to give concise, factual, and practical answers about food options, " +
+                            "macronutrients, healthy eating, and campus dining facilities. " +
+                            "Do not invent nonexistent restaurants or menus. If unsure, say so briefly. " +
+                            "Keep tone helpful and grounded in real-world logic."
+                    },
                     { role: 'user', content: message }
                 ],
-                temperature: 0.7,  //  Adds controlled randomness for natural responses
-                max_tokens: 256  //  Limits output length
+                temperature: 0.5,     //  Lowered for factual consistency
+                max_tokens: 300       //  Conservative to stay well within rate limits
             })
         });
-
         return await response.json();
     }
 
-    //  Attempt with the provided or default model
     let data = await sendRequest(activeModel);
 
-    //  Check if model was deprecated or unavailable
     if (data?.error?.code === 'model_decommissioned' || data?.error?.message?.includes('decommissioned')) {
-        console.warn(`Primary model "${activeModel}" is deprecated. Attempting fallback models.`);
-
-        //  Iterate through fallback models until one succeeds
+        console.warn(`Primary model "${activeModel}" unavailable. Trying fallback models.`);
         for (const fallback of FALLBACK_MODELS) {
             console.log(`Trying fallback model: ${fallback}`);
             data = await sendRequest(fallback);
-
             if (!data.error) {
                 console.log(`Fallback model "${fallback}" succeeded.`);
                 break;
@@ -87,18 +89,12 @@ async function generateResponse(message, modelOverride) {
         }
     }
 
-    //  Log final API response for debugging
     console.log('Groq API response:', JSON.stringify(data, null, 2));
-
-    //  Extract and return generated text or fallback message
     return data.choices?.[0]?.message?.content?.trim() || '(no response)';
 }
-
-
 
 
 // ============================================================================================================
 //  Export Functions
 // ============================================================================================================
-
 module.exports = { generateResponse };

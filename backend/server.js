@@ -12,8 +12,19 @@ const { Pool } = require('pg');  //  PostgreSQL client for connecting and queryi
 const app = express();  //  Creates an instance of the Express application
 const PORT = process.env.PORT || 3000;  //  Defines which port the backend listens on (default 3000)
 
+//  --------------- Custom Functions ---------------
+const { calculateNutrition } = require('./functions/nutritionRec.js');  // For '/api/recommend-meals'
+const { generateResponse } = require('./functions/chatbot_functions');  //  Imports chatbot logic from external module
+
 app.use(cors());  //  Allows frontend requests from different origins (e.g., React app on port 5173)
 app.use(express.json());  //  Parses incoming JSON payloads from POST/PUT requests into req.body
+
+
+
+
+
+
+
 
 
 
@@ -30,7 +41,6 @@ app.use(express.json());  //  Parses incoming JSON payloads from POST/PUT reques
  * The database uses AWS RDS (PostgreSQL), and the chatbot logic is imported
  * from an external helper file located in `/functions/chatbot_functions.js`.
  */
-
 //  --------------- Database Connection Pool ---------------
 const pool = new Pool({
     host: process.env.DB_HOST,  //  The hostname or endpoint of the RDS PostgreSQL instance
@@ -44,8 +54,11 @@ const pool = new Pool({
 });
 
 
-//  --------------- Chatbot Functions (Groq API Integration) ---------------
-const { generateResponse } = require('./functions/chatbot_functions');  //  Imports chatbot logic from external module
+
+
+
+
+
 
 
 
@@ -53,7 +66,7 @@ const { generateResponse } = require('./functions/chatbot_functions');  //  Impo
 // 3. Backend Routes
 // ============================================================================================================
 
-//  --------------- Root Endpoint ---------------
+//  --------------- Root Endpoint and Health Check Route ---------------
 /**
  * @route GET /
  * @description Basic route that confirms the backend is running.
@@ -65,8 +78,6 @@ app.get('/', (req, res) => {
     res.send('<h1>NourishLU Backend Running</h1>');
 });
 
-
-//  --------------- Health Check Route ---------------
 /**
  * @route GET /api/health
  * @description Basic health check for backend service status.
@@ -107,10 +118,57 @@ app.get('/api/db-test', async (req, res) => {
 });
 
 
+// --------------- Create New User Route ---------------
+/**
+ * @route POST /api/users
+ * @description Adds a new user with personal and nutrition-related info
+ * @body {string} name - User's name
+ * @body {number} height_cm - Height in centimeters
+ * @body {number} weight_kg - Weight in kilograms
+ * @body {number} age - Age in years
+ * @body {string} gender - 'male' or 'female'
+ * @body {string} activity_level - 'low', 'moderate', or 'high'
+ * @body {string} goal - 'lose', 'maintain', or 'gain'
+ */
+app.post('/api/users', async (req, res) => {
+  try {
+    const { name, height_cm, weight_kg, age, gender, activity_level, goal } = req.body;
 
-const { calculateNutrition } = require('./functions/nutritionRec.js');
+    // 1️ Validate input
+    if (!name || !height_cm || !weight_kg || !age || !gender || !activity_level || !goal) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
 
-// --------------- Meal Recommendation Route ---------------
+    // 2️ Insert user into database
+    const insertQuery = `
+      INSERT INTO users (name, height_cm, weight_kg, age, gender, activity_level, goal)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      RETURNING user_id, name, height_cm, weight_kg, age, gender, activity_level, goal;
+    `;
+
+    const result = await pool.query(insertQuery, [
+      name,
+      height_cm,
+      weight_kg,
+      age,
+      gender.toLowerCase(),
+      activity_level.toLowerCase(),
+      goal.toLowerCase(),
+    ]);
+
+    // 3️ Return newly created user info
+    res.status(201).json({
+      message: 'User successfully created',
+      user: result.rows[0],
+    });
+  } catch (err) {
+    console.error('Error creating user:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+
+// --------------- User Nutrition Routes ---------------
 /**
  * @route GET /api/recommend-meals
  * @description Suggests meals that match a user's nutrition needs
@@ -181,139 +239,6 @@ app.get('/api/recommend-meals', async (req, res) => {
   }
 });
 
-
-
-// --------------- Create New User Route ---------------
-/**
- * @route POST /api/users
- * @description Adds a new user with personal and nutrition-related info
- * @body {string} name - User's name
- * @body {number} height_cm - Height in centimeters
- * @body {number} weight_kg - Weight in kilograms
- * @body {number} age - Age in years
- * @body {string} gender - 'male' or 'female'
- * @body {string} activity_level - 'low', 'moderate', or 'high'
- * @body {string} goal - 'lose', 'maintain', or 'gain'
- */
-app.post('/api/users', async (req, res) => {
-  try {
-    const { name, height_cm, weight_kg, age, gender, activity_level, goal } = req.body;
-
-    // 1️ Validate input
-    if (!name || !height_cm || !weight_kg || !age || !gender || !activity_level || !goal) {
-      return res.status(400).json({ error: 'Missing required fields' });
-    }
-
-    // 2️ Insert user into database
-    const insertQuery = `
-      INSERT INTO users (name, height_cm, weight_kg, age, gender, activity_level, goal)
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
-      RETURNING user_id, name, height_cm, weight_kg, age, gender, activity_level, goal;
-    `;
-
-    const result = await pool.query(insertQuery, [
-      name,
-      height_cm,
-      weight_kg,
-      age,
-      gender.toLowerCase(),
-      activity_level.toLowerCase(),
-      goal.toLowerCase(),
-    ]);
-
-    // 3️ Return newly created user info
-    res.status(201).json({
-      message: 'User successfully created',
-      user: result.rows[0],
-    });
-  } catch (err) {
-    console.error('Error creating user:', err);
-    res.status(500).json({ error: 'Server error' });
-  }
-});
-
-
-
-//  --------------- Chatbot Endpoint ---------------
-/**
- * @route POST /api/chat
- * @description Accepts a message from the frontend and sends it to the Groq API.
- *              Automatically retries using fallback models if the primary model is unavailable.
- *              Returns the model’s generated response as JSON for use in the chatbot interface.
- * @returns {JSON} Chatbot reply, success status, and model used.
- */
-app.post('/api/chat', async (req, res) => {
-    try {
-        //  Extract and validate input message from frontend
-        const { message } = req.body;  //  Extract user message from request body
-        if (!message || typeof message !== 'string') {
-            return res.status(400).json({ success: false, error: 'Missing or invalid "message" field.' });
-        }
-
-        //  Ensure the Groq API key is available
-        if (!process.env.GROQ_API_KEY) {
-            return res.status(400).json({ success: false, error: 'Missing Groq API key in environment.' });
-        }
-
-        //  Retrieve model list from environment and fallback options
-        const primaryModel = process.env.LLM_MODEL || 'llama-3.1-8b-instant';
-        const fallbackModels = [
-            'llama-3.1-70b-versatile',
-            'mixtral-8x7b',
-            'gemma2-9b-it'
-        ];
-
-        //  Attempt generation with primary model, then try fallbacks
-        let reply = '(no response)';
-        let modelUsed = primaryModel;
-
-        async function attemptChat(model) {
-            try {
-                const { generateResponse } = require('./functions/chatbot_functions');
-                return await generateResponse(message, model);
-            } catch (error) {
-                console.warn(`Chat attempt with model "${model}" failed:`, error.message);
-                return null;
-            }
-        }
-
-        //  First attempt with primary model
-        let result = await attemptChat(primaryModel);
-        if (result && result !== '(no response)') {
-            reply = result;
-        } else {
-            //  Try each fallback model sequentially
-            for (const fallback of fallbackModels) {
-                console.log(`Retrying chat with fallback model: ${fallback}`);
-                result = await attemptChat(fallback);
-                if (result && result !== '(no response)') {
-                    reply = result;
-                    modelUsed = fallback;
-                    break;
-                }
-            }
-        }
-
-        //  Send final response to frontend with model info
-        console.log(`Chat completed using model: ${modelUsed}`);
-        res.json({
-            success: true,
-            modelUsed: modelUsed,
-            reply: reply
-        });
-    }
-    catch (error) {
-        //  Handle unexpected runtime or API errors
-        console.error('Chat API Error:', error);
-        res.status(500).json({
-            success: false,
-            error: error.message
-        });
-    }
-});
-
-
-// --------------- Generate Nutritional Information ---------------
 /**
  * @description
  * Calculates daily nutritional recommendations based on user profile data from the frontend.
@@ -377,17 +302,113 @@ app.post('/api/calculate-nutrition', (req, res) => {
     const multiplier = activityMultipliers[activityLevel] || 1.55;
     const tdee = bmr * multiplier;
 
-    // Macronutrient breakdown
-    const resBody = {
-        kcal: Math.round(tdee),
-        fat: Math.round((tdee * 0.30) / 9),
-        protein: Math.round((tdee * 0.25) / 4),
-        carbs: Math.round((tdee * 0.45) / 4)
-    };
+    // More realistic nutrient breakdown
+    const kcal = Math.round(tdee);
+
+    // Protein based on body weight (1.6g per kg)
+    const protein = Math.round(w * 1.6);
+
+    // Fat ~25% of total calories
+    const fat = Math.round((kcal * 0.25) / 9);
+
+    // Remaining calories go to carbs
+    const remainingCalories = kcal - (protein * 4 + fat * 9);
+    const carbs = Math.round(remainingCalories / 4);
 
     // Return result
-    res.json(resBody);
+    res.json({
+        kcal,
+        protein,
+        fat,
+        carbs
+    });
 });
+
+
+// --------------- Chatbot API Endpoint ---------------
+/**
+ * @description
+ * Handles chat requests between the frontend and Groq API.
+ * Routes messages through a primary model and retries fallbacks if needed.
+ * Adds contextual grounding to reduce hallucinations.
+ *
+ * @route POST /api/chat
+ * @returns {Object} JSON { success, modelUsed, reply }
+ */
+app.post('/api/chat', async (req, res) => {
+    try {
+        //  Extract and validate input message from frontend
+        const { message } = req.body;
+        if (!message || typeof message !== 'string') {
+            return res.status(400).json({ success: false, error: 'Missing or invalid "message" field.' });
+        }
+
+        //  Ensure the Groq API key is available
+        if (!process.env.GROQ_API_KEY) {
+            return res.status(400).json({ success: false, error: 'Missing Groq API key in environment.' });
+        }
+
+        //  Retrieve model list from environment and fallback options
+        const primaryModel = process.env.LLM_MODEL || 'llama-3.1-8b-instant';
+        const fallbackModels = [
+            'llama-3.1-70b-versatile',
+            'mixtral-8x7b',
+            'gemma2-9b-it'
+        ];
+
+        //  Attempt generation with primary model, then try fallbacks
+        let reply = '(no response)';
+        let modelUsed = primaryModel;
+
+        async function attemptChat(model) {
+            try {
+                const { generateResponse } = require('./functions/chatbot_functions');
+                return await generateResponse(message, model);
+            } catch (error) {
+                console.warn(`Chat attempt with model "${model}" failed:`, error.message);
+                return null;
+            }
+        }
+
+        //  First attempt with primary model
+        let result = await attemptChat(primaryModel);
+        if (result && result !== '(no response)') {
+            reply = result;
+        } else {
+            //  Try each fallback model sequentially
+            for (const fallback of fallbackModels) {
+                console.log(`Retrying chat with fallback model: ${fallback}`);
+                result = await attemptChat(fallback);
+                if (result && result !== '(no response)') {
+                    reply = result;
+                    modelUsed = fallback;
+                    break;
+                }
+            }
+        }
+
+        //  Send final response to frontend
+        console.log(`Chat completed using model: ${modelUsed}`);
+        res.json({
+            success: true,
+            modelUsed: modelUsed,
+            reply: reply
+        });
+    } catch (error) {
+        console.error('Chat API Error:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
+
+
+
+
+
+
 
 
 

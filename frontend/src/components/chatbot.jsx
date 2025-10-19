@@ -11,20 +11,18 @@ const ChatBot = () => {
 
     // file change handler
     const handleFileChange = (e) => {
-    const file = e.target.files && e.target.files[0];
-    if (!file) return;
-    if (!file.type.startsWith('image/')) {
-        alert('Please select an image file.');
-        return;
-    }
-    if (file.size > 8 * 1024 * 1024) { // 8MB limit
-        alert('File is too large (max 8MB).');
-        return;
-    }
-    setSelectedFile(file);
-    setPreviewUrl(URL.createObjectURL(file));
-    // optionally auto-upload or set to be sent after sending message
-    // uploadImage();
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        if (!file.type.startsWith('image/')) {
+            alert('Please select an image file.');
+            return;
+        }
+        if (file.size > 8 * 1024 * 1024) { // 8MB limit
+            alert('File is too large (max 8MB).');
+            return;
+        }
+        setSelectedFile(file);
+        setPreviewUrl(URL.createObjectURL(file));
     };
 
     const handleInputChange = (e) => {
@@ -40,34 +38,32 @@ const ChatBot = () => {
         setLoading(true);
 
         try {
-             // Call your backend which connects to AWS Bedrock
+            // Call your teammate's backend endpoint
             const response = await fetch('http://localhost:3000/api/chat', {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json' 
                 },
                 body: JSON.stringify({ 
-                    message: inputValue,
-                    conversationHistory: messages // Send conversation history for context
+                    message: inputValue
+                    // Remove conversationHistory if not needed by new endpoint
                 })
             });
 
             if (!response.ok) {
-                throw new Error(`HTTP error! Status: \${response.status}`);
+                throw new Error(`HTTP error! Status: ${response.status}`);
             }
 
             const data = await response.json();
-            console.log('Bedrock response:', data);
+            console.log('API response:', data);
 
-            // Extract the message from Bedrock response
+            // Extract the reply from the new endpoint response
             const assistantMessage = { 
                 role: 'assistant', 
-                content: data.message || data.response 
+                content: data.reply || 'Sorry, I could not generate a response.'
             };
             
-            setTimeout(() => {
-                setMessages((prevMessages) => [...prevMessages, assistantMessage]);
-            }, 500);
+            setMessages((prevMessages) => [...prevMessages, assistantMessage]);
 
         } catch (error) {
             console.error('Error fetching completion:', error);
@@ -87,20 +83,6 @@ const ChatBot = () => {
         }
     }, [messages]);
 
-    
-    async function sendMessage(message) {
-    const response = await fetch('http://localhost:3000/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message })
-    });
-    
-    const data = await response.json();
-        return data.reply;
-    }
-
-
-
     return (
         <div className="chatbot-container">
             {/* Header */}
@@ -112,6 +94,7 @@ const ChatBot = () => {
             <div className="chat-window" ref={chatWindowRef}>
                 {messages.length === 0 ? (
                     <div className="message assistant">
+                        {/* Optional: Add a welcome message */}
                     </div>
                 ) : (
                     messages.map((msg, index) => (
@@ -131,7 +114,7 @@ const ChatBot = () => {
                             type="text"
                             value={inputValue}
                             onChange={handleInputChange}
-                            placeholder="Caclulate your nutrient intake!"
+                            placeholder="Calculate your nutrient intake!"
                             disabled={loading}
                             required
                         />
