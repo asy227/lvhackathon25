@@ -1,6 +1,7 @@
 /* Main Container */
 .chatbot-container {
     width: 500px;
+    height: 400px;
     max-width: 90%;
     margin: 20px auto;
     padding: 0;
@@ -9,6 +10,8 @@
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 /* Header */
@@ -33,6 +36,7 @@
     padding: 20px;
     min-height: 200px;
     max-height: 400px;
+    flex: 1; /* Take up remaining space */
     overflow-y: auto;
     border-bottom: 1px solid #e9ecef;
 }
@@ -64,6 +68,7 @@
     padding: 20px;
     background: white;
     border-radius: 0 0 16px 16px;
+    flex-shrink: 0;
 }
 
 .input-form {
