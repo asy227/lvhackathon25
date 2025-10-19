@@ -40,32 +40,42 @@ const ChatBot = () => {
         setLoading(true);
 
         try {
-            const requestBody = {
-                prompt: inputValue,
-            };
-
-            const res = await fetch('https://6vtiprdy9b.execute-api.us-west-2.amazonaws.com/full_stack_snacks_api_stage/ask', {
+             // Call your backend which connects to AWS Bedrock
+            const response = await fetch('http://localhost:3000/api/chat', {
                 method: 'POST',
-                body: JSON.stringify(requestBody),
-                headers: {
-                    'Content-Type': 'application/json',
+                headers: { 
+                    'Content-Type': 'application/json' 
                 },
+                body: JSON.stringify({ 
+                    message: inputValue,
+                    conversationHistory: messages // Send conversation history for context
+                })
             });
 
-            if (!res.ok) {
-                throw new Error(`HTTP error! Status: ${res.status}`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: \${response.status}`);
             }
 
-            const data = await res.json();
-            console.log(data.response);
+            const data = await response.json();
+            console.log('Bedrock response:', data);
 
-            const assistantMessage = { role: 'assistant', content: data.response };
+            // Extract the message from Bedrock response
+            const assistantMessage = { 
+                role: 'assistant', 
+                content: data.message || data.response 
+            };
+            
             setTimeout(() => {
                 setMessages((prevMessages) => [...prevMessages, assistantMessage]);
             }, 500);
+
         } catch (error) {
             console.error('Error fetching completion:', error);
-            alert('There was an error fetching the response. Please try again.');
+            const errorMessage = {
+                role: 'assistant',
+                content: 'Sorry, I encountered an error. Please try again.'
+            };
+            setMessages((prevMessages) => [...prevMessages, errorMessage]);
         } finally {
             setLoading(false);
         }
@@ -77,6 +87,17 @@ const ChatBot = () => {
         }
     }, [messages]);
 
+    
+    async function sendMessage(message) {
+    const response = await fetch('http://localhost:3000/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message })
+    });
+    
+    const data = await response.json();
+        return data.reply;
+    }
 
 
 
