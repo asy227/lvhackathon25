@@ -78,11 +78,11 @@ img {
 
 
 .sidebar-menu a:hover {
-  background-color: #3e6b44;
+  background-color: #527a33;
 }
 
 .sidebar-menu a.active {
-  background-color: #3e6b44;
+  background-color: #527a33;
 }
 
 
@@ -171,7 +171,7 @@ img {
   outline: none; /* ensures it doesn’t come back on click */
 }
 .logout-btn:hover {
-  background-color: #3e6b44;
+  background-color: #527a33;
 }
 
 .sidebar.expanded .logout-btn {
