@@ -4,6 +4,7 @@ import "./App.css";
 // Import your components
 import NavBar from "./components/navbar.jsx";
 import StudentHeader from "./components/studentHeader.jsx";
+import ChatBot from "./components/chatbot.jsx";
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
         style={{
           marginLeft: "100px", // aligns with collapsed sidebar width
           marginTop: "100px", // space below StudentHeader
+          marginRight: "420px",
           padding: "1rem",
           color: "white",
         }}
@@ -26,7 +28,13 @@ function App() {
         <h1>Welcome to MyApp</h1>
         <p>This is your main content area.</p>
         <p>Hover over the sidebar to expand it!</p>
+
       </main>
+
+      <div classname = "chatbot">
+            <ChatBot />
+      </div>
+
     </div>
   );
 }

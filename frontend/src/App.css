@@ -40,3 +40,15 @@
 .read-the-docs {
   color: #888;
 }
+
+/* Chatbot positioning */
+.chatbot-container {
+  position: fixed;
+  right: 2rem; /* Matches your root padding */
+  top: 50%;
+  transform: translateY(-50%);
+  width: 400px;
+  max-width: calc(100vw - 4rem); /* Responsive width */
+  z-index: 1000;
+}
+
