@@ -3,22 +3,19 @@
 ## Frontend – NourishLU Web Client  
 
 ### Overview  
-The frontend is a React application built with **Vite**. It provides the user interface for NourishLU, allowing users to explore on-campus dining options, view nutrition data, and connect with custom diet or fitness plans.  
+The frontend is a React application built with **Vite**. It provides the user interface for **NourishLU**, allowing users to explore on-campus dining options, view nutrition data, and connect with custom diet or fitness plans.  
 
-It communicates with the backend API via HTTP requests to the deployed server on AWS EC2.  
+It communicates with the backend API via HTTP requests to the deployed server.  
 
 ---  
 
 ### Running Locally  
 1. Navigate to the frontend directory  
    **cd frontend**  
-
 2. Install dependencies  
    **npm install**  
-
 3. Start the development server  
    **npm run dev**  
-
 4. Visit the local site  
    **http://localhost:5173**  
 
@@ -27,133 +24,155 @@ It communicates with the backend API via HTTP requests to the deployed server on
 ---  
 
 ### Building for Production  
-To prepare the frontend for deployment:  
+To build optimized static files for deployment:  
 **npm run build**  
 
-This generates a **dist/** folder containing static assets that can later be served through the backend or a hosting service such as AWS Amplify or S3.  
+This generates a **dist/** folder containing static assets that can be served via **Nginx** or another hosting service.  
 
 ---  
 
 ## Backend – NourishLU API  
 
 ### Overview  
-The backend powers all data and logic for NourishLU.  
-It is built with **Node.js** and **Express**, connects to a **PostgreSQL** database hosted on **AWS RDS (Aurora PostgreSQL)**, and is deployed on an **EC2 instance**.  
+The backend handles all data and logic for NourishLU.  
+It is built with **Node.js** and **Express**, connects to a **PostgreSQL** database hosted on **AWS RDS (Aurora PostgreSQL)**, and runs on an **Amazon EC2** instance.  
 
 ---  
 
 ### Running Locally  
-1. Navigate to the backend folder  
+To test and develop the backend on your local machine:  
+
+1. Navigate to the backend directory  
    **cd backend**  
 
 2. Install dependencies  
    **npm install**  
 
-3. Start in production mode  
+3. Create a local `.env` file using `.env.example` as a template.  
+   Update the database credentials to point to your local or test database instance.  
+
+4. Start the backend server in development mode (auto-reloads on file changes):  
+   **npm run dev**  
+
+5. Or start it in production mode:  
    **npm run start**  
 
-4. Start in development mode (auto-restarts on file save)  
-   **npm run dev**  
+6. Visit the API locally:  
+   **http://localhost:3000/api/db-test**  
+
+> Ensure your local database is running and matches the configuration in `.env`.  
 
 ---  
 
 ### Environment Setup  
-Create a **.env** file inside the backend folder using **.env.example** as a template.  
-
-The file should include variables such as:  
+Create a **.env** file inside the backend directory using **.env.example** as a guide.  
+Include variables such as:  
 `PORT`, `DB_HOST`, `DB_USER`, `DB_PASS`, `DB_NAME`, and `DB_PORT`.  
 
-Never commit `.env` files or AWS credentials.  
-The `.env.example` file is safe to share as a reference.  
+Never commit `.env` files or any secrets to GitHub. The `.env.example` file can safely remain public for reference.  
 
 ---  
 
-### Process Management with PM2  
-The backend on EC2 runs continuously using **PM2**, a production process manager for Node.js.  
+## Web Hosting and Deployment  
 
-PM2 keeps the backend online, restarts it automatically on failure, and ensures it restarts after server reboots.  
+### Overview  
+The full stack is deployed on an **Amazon EC2 instance** running **Amazon Linux 2023**.  
+The EC2 instance connects securely to an **AWS RDS Aurora PostgreSQL** cluster within the same VPC.  
 
-**Common PM2 Commands**  
-- `pm2 list` → View running applications  
-- `pm2 logs nourishlu-backend` → View logs  
-- `pm2 restart nourishlu-backend` → Restart after updates  
-- `pm2 save` → Save the current process list for reboot  
-- `pm2 startup` → Register PM2 to start automatically on boot  
+**Traffic Flow:**  
+Frontend → Nginx (port 80/443) → Node.js backend (port 3000) → RDS database (port 5432)  
+
+---  
+
+### Accessing the Server  
+1. Obtain your SSH key-pair from the project admin or AWS console.  
+2. Connect using a secure terminal command (example syntax):  
+   **ssh -i "<your-key.pem>" ec2-user@<server-address>**  
+3. Navigate to the project:  
+   **cd ~/lvhackathon25**  
+4. Pull the latest updates and redeploy if needed:  
+   **git pull origin main**  
+   **deploy_backend.sh**  
+
+---  
+
+### Deployment Script  
+A deployment script simplifies backend restarts and updates.  
+
+**Location:** `/usr/local/bin/deploy_backend.sh`  
+
+**Function:**  
+- Installs dependencies  
+- Stops existing Node.js processes  
+- Restarts the backend in the background with logging  
+
+This ensures consistent, quick redeployments during testing.  
+
+---  
+
+### Nginx Configuration  
+Nginx acts as a reverse proxy and serves the frontend.  
+- Frontend files are hosted in `/var/www/nourishlu`  
+- Backend requests to `/api` are proxied to **http://127.0.0.1:3000**  
+- SSL certificates are managed via **Let’s Encrypt (Certbot)**  
+- HTTP traffic automatically redirects to HTTPS  
+
+---  
+
+### Database Integration  
+The backend connects to the **AWS RDS Aurora PostgreSQL** instance using environment variables.  
+Access is restricted to:  
+- The EC2 instance  
+- Approved developer IP addresses  
+
+To grant new developer access, add their public IP in RDS inbound rules:  
+**Type:** PostgreSQL **Port:** 5432 **Source:** `<developer_public_IP>/32`  
+
+> Never allow global access (`0.0.0.0/0`). Keep inbound rules limited for security.  
+
+---  
+
+### Git Workflow  
+
+**Repository:** Private GitHub repository for project collaboration  
+
+**Workflow Summary:**  
+1. Develop and test locally on ports 5173 (frontend) and 3000 (backend).  
+2. Commit and push to the `main` branch on GitHub.  
+3. SSH into the server and pull updates with:  
+   **git pull origin main**  
+4. Run the deploy script to restart the backend:  
+   **deploy_backend.sh**  
+5. Verify functionality through API endpoints.  
+
+> On EC2, GitHub authentication uses Personal Access Tokens instead of passwords.  
+
+---  
+
+### Live Deployment  
+
+**Frontend:** Hosted through Nginx (secured with SSL)  
+**Backend (API):** Proxied through Nginx to Node.js  
+**SSL Certificates:** Managed via Let’s Encrypt  
+**Server Stack:**  
+- Node.js v20+  
+- Nginx 1.28+  
+- Amazon Linux 2023  
+- PostgreSQL (Aurora RDS)  
 
 ---  
 
 ### Security Notes  
-- `.env`, `.pem` keys, and build artifacts are ignored via `.gitignore`.  
-- Never upload credentials, database passwords, or SSH keys to GitHub.  
-- The database is only accessible to approved IP addresses and the EC2 instance.  
-- Always confirm firewall and security group settings before deployment.  
-
----  
-
-## Web Hosting and Database Integration on AWS EC2  
-
-### Overview  
-The backend is hosted on an **Amazon EC2 instance** running **Amazon Linux 2023**.  
-It connects to an **AWS RDS Aurora PostgreSQL** database within the same VPC.  
-
-**Traffic Flow:**  
-Frontend → EC2 backend (port 3000) → RDS database (port 5432)  
-
----  
-
-### Accessing the EC2 Instance  
-1. Download your SSH key-pair (**ws-default-keypair.pem**) from the AWS Hackathon portal.  
-2. Connect using PowerShell or terminal:  
-   **ssh -i "C:\Users\<YourName>\Downloads\ws-default-keypair.pem" ec2-user@54.146.231.84**  
-3. Once connected, navigate to the backend directory:  
-   **cd ~/lvhackathon25/backend**  
-4. Pull latest changes and restart:  
-   **git pull origin main**  
-   **pm2 restart nourishlu-backend**  
-
----  
-
-### Deployment Workflow  
-1. Develop and test locally on ports 5173 (frontend) and 3000 (backend).  
-2. Push updates to GitHub.  
-3. SSH into the EC2 instance.  
-4. Pull changes from the main branch.  
-5. Restart the backend using PM2.  
-6. Verify connection to the database via `/api/db-test`.  
-
----  
-
-### Connecting to the Database  
-The backend uses environment variables to connect to the Aurora PostgreSQL cluster.  
-Only the EC2 instance and approved developer IP addresses can access the RDS cluster.  
-
-To allow a new developer to connect for local testing:  
-Add their public IP to the RDS inbound rules under:  
-**Type:** PostgreSQL **Port:** 5432 **Source:** `<their_public_IP>/32`  
-
-> Avoid opening the database to all traffic (`0.0.0.0/0`). Always use restrictive access rules.  
-
----  
-
-### Live Backend Access  
-The deployed backend is available at:  
-**http://54.146.231.84:3000**  
-
-API endpoints can be tested via routes such as:  
-**http://54.146.231.84:3000/api/db-test**  
+- `.env`, `.pem`, and build artifacts are excluded via `.gitignore`.  
+- Secrets and credentials are never committed to GitHub.  
+- HTTPS ensures encrypted communication.  
+- EC2 and RDS communicate within a private VPC network.  
 
 ---  
 
 ### Summary  
-- Frontend and backend run separately during development but integrate via API calls.  
-- Production backend is managed by **PM2** for reliability and automatic restarts.  
-- The EC2 instance connects securely to the AWS RDS database using environment variables.  
-- Sensitive data is protected through environment files and AWS network security configurations.  
-
-## Deployment on AWS EC2
-
-- Hosted at: https://nourishlu.duckdns.org
-- Backend: Node.js + Express (port 3000, proxied via Nginx)
-- Frontend: React (Vite build, served from /var/www/nourishlu)
-- SSL: Let's Encrypt (certbot)
-- Deployment script: /usr/local/bin/deploy_backend.sh
+- **Frontend:** React + Vite served through Nginx  
+- **Backend:** Node.js + Express connected to Aurora PostgreSQL  
+- **Hosting:** Amazon EC2 with custom domain and SSL  
+- **Deployment:** Automated via `/usr/local/bin/deploy_backend.sh`  
+- **Version Control:** GitHub → EC2 sync via SSH and tokens  
