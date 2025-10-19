@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./DiningServices.css";
 
 export default function DiningServices() {
   const [showGoals, setShowGoals] = useState(false);
   const [selectedGoals, setSelectedGoals] = useState([]);
   const [recommendations, setRecommendations] = useState([]);
+  const [reqBody, setReqBody] = useState({});
 
   const dietaryGoals = [
     "High Protein",
@@ -17,31 +18,43 @@ export default function DiningServices() {
     "High Carb",
   ];
 
+  // Whenever selectedGoals changes, rebuild the request body
+  useEffect(() => {
+    const newReqBody = {
+      goals: selectedGoals,
+      user_id: 1, // optional: replace with actual logged-in user id if available
+    };
+    setReqBody(newReqBody);
+  }, [selectedGoals]);
+
   const toggleGoal = (goal) => {
-    if (selectedGoals.includes(goal)) {
-      setSelectedGoals(selectedGoals.filter((g) => g !== goal));
-    } else {
-      setSelectedGoals([...selectedGoals, goal]);
+    setSelectedGoals((prev) =>
+      prev.includes(goal) ? prev.filter((g) => g !== goal) : [...prev, goal]
+    );
+  };
+
+  const selectAll = () => setSelectedGoals(dietaryGoals);
+  const deselectAll = () => setSelectedGoals([]);
+
+  // Main fetch function
+  const handleShowRecommendations = async () => {
+    try {
+      const response = await fetch("http://localhost:3000/api/recommend-meals", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(reqBody),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch recommendations");
+      }
+
+      const data = await response.json();
+      setRecommendations(data.suggested_meals || []);
+    } catch (err) {
+      console.error("Error fetching recommendations:", err);
+      setRecommendations([]);
     }
-  };
-
-  const selectAll = () => {
-    setSelectedGoals(dietaryGoals);
-  };
-
-  const deselectAll = () => {
-    setSelectedGoals([]);
-  };
-
-  const handleShowRecommendations = () => {
-    // Placeholder mock data (backend connection later)
-    setRecommendations([
-      "Rathbone Dining Hall — Grilled Chicken Bowl",
-      "The Grind @ FML — Protein Smoothie",
-      "University Center — Leaf & Ladle Salad",
-      "The Health @ UC — Quinoa Power Bowl",
-      "Common Grounds — Oatmeal & Fruit Bar",
-    ]);
   };
 
   return (
@@ -103,7 +116,9 @@ export default function DiningServices() {
           <ul className="recommendations-list">
             {recommendations.map((rec, index) => (
               <li key={index} className="recommendation-item">
-                {rec}
+                {rec.meal_name
+                  ? `${rec.location} — ${rec.meal_name}`
+                  : rec}
               </li>
             ))}
           </ul>

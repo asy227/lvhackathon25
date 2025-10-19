@@ -21,7 +21,7 @@ function StudentHeader() {
     <div className="student-header">
       <div className="student-header-left">
         <img src="profile.webp" alt="Profile" className="profile-icon" />
-        <h2>Hi, FName LName!</h2>
+        <h2 className="student-greeting">Welcome, Lehigh student!</h2>
       </div>
 
       <div
