@@ -81,6 +81,11 @@ img {
   background-color: #354c38;
 }
 
+.sidebar-menu a.active {
+  background-color: #354c38;
+}
+
+
 /* ===== Icons ===== */
 .icon {
   font-size: 2rem;
