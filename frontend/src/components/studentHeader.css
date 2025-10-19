@@ -1,0 +1,114 @@
+
+h2 {
+  font-size: 2rem;
+  margin: 0;
+}
+
+/* ===== Student Header Container ===== */
+.student-header {
+  position: fixed;
+  top: 0.5rem;
+  left: 100px; /* start aligned with collapsed sidebar */
+  width: calc(100% - 120px); /* 🔥 fills rest of screen dynamically */
+  z-index: 5;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  background-color: white;
+  color: black;
+  padding: 1.2rem 2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+
+  transition:
+    left 0.35s ease-in-out,
+    width 0.35s ease-in-out;
+}
+
+/* When sidebar expands */
+.sidebar.expanded ~ .student-header {
+  left: 200px; /* match expanded sidebar width */
+  width: calc(100% - 220px); /* adjusts dynamically */
+}
+
+/* ===== Left side (Profile + Name) ===== */
+.student-header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.profile-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* ===== Right side (Campus Card + Label) ===== */
+.student-header-right {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-right: 50px;
+  cursor: pointer;
+  
+  
+}
+
+.student-header-right:hover{
+    color: #97c673; /* subtle highlight */
+
+}
+
+
+.campus-card-img {
+  width: 90px;
+  height: 55px;
+  object-fit: cover;
+  border-radius: 6px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.campus-card-label {
+  font-weight: bold;
+  font-size: 1.5rem;
+  transition: color 0.2s ease;
+}
+
+
+/* ===== Dropdown Menu ===== */
+.campus-dropdown {
+  position: absolute;
+  top: 70px; /* below image */
+  right: 0;
+  background-color: white;
+  color: black;
+  border-radius: 8px;
+  padding: 0.8rem 1rem;
+  z-index: 10;
+  width: 220px;
+  text-align: left;
+  font-size: 1rem;
+  animation: dropdownFade 0.25s ease;
+  font-family: "Rethink Sans", sans-serif;
+}
+
+.campus-dropdown p {
+  margin: 0.4rem 0;
+}
+
+/* Simple fade-in animation for dropdown */
+@keyframes dropdownFade {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
