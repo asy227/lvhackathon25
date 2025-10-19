@@ -26,14 +26,16 @@ export default function Navbar({ onExpandChange }) {
       <ul className="sidebar-menu">
         <li>
           <NavLink to="/" end className={({ isActive }) => (isActive ? "active" : "")}>
-            <span className="icon">🏠</span>
+            {/* <span className="icon">🏠</span> */}
+            <img src="/homeicon.png" alt="home" className="home-icon" />
             <span className="label">Home</span>
           </NavLink>
         </li>
 
         <li>
           <NavLink to="/dining" className={({ isActive }) => (isActive ? "active" : "")}>
-            <span className="icon">📅</span>
+            {/* <span className="icon">📅</span> */}
+            <img src="/mealpickericon.png" alt="meal" className="meal-picker" />
             <span className="label">Dining Services</span>
           </NavLink>
         </li>
