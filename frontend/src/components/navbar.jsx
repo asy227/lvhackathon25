@@ -38,13 +38,6 @@ export default function Navbar({ onExpandChange }) {
           </NavLink>
         </li>
 
-        <li>
-          <NavLink to="/mealpicker" className={({ isActive }) => (isActive ? "active" : "")}>
-            <span className="icon">👥</span>
-            <span className="label">Meal Picker</span>
-          </NavLink>
-        </li>
-
       </ul>
 
       <div className="sidebar-footer">
