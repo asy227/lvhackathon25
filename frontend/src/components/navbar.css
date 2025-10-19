@@ -71,13 +71,14 @@ img {
   transition: background-color 0.25s ease;
   padding: 8px;
   border-radius: 8px;
-  width: 90%; /* makes hover background not touch edges */
+  width: 100%; /* makes hover background not touch edges */
   justify-content: center; /* icons centered when collapsed */
   overflow: hidden;
 }
 
+
 .sidebar-menu a:hover {
-  background-color: #354c42;
+  background-color: #354c38;
 }
 
 /* ===== Icons ===== */
@@ -154,7 +155,7 @@ img {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 90%;
+  width: 100%;
   cursor: pointer;
   padding: 8px;
   border-radius: 8px;
@@ -191,14 +192,14 @@ img {
   width: 40px;  /* 🔥 controls size */
   height: 40px; /* keep it square */
   object-fit: contain; /* prevents stretching */
-  margin-right: 0; /* default: no margin */
-  margin-top: 5px;
+  margin-right: 0px; /* default: no margin */
+  margin-top: 0px;
   transition: transform 0.3s ease;
 }
 
 /* Slight right shift when expanded */
 .sidebar.expanded .logout-icon {
-  margin-right: 10px;
+  margin-left: 15px;
   transform: translateX(3px);
 }
 
