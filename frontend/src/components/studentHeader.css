@@ -52,6 +52,7 @@ h2 {
   gap: 1rem;
   margin-right: 50px;
   cursor: pointer;
+  
 }
 
 .student-header-right:hover {
@@ -63,6 +64,9 @@ h2 {
   height: 55px;
   object-fit: cover;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border: 3px solid rgb(255, 255, 255);
+  
+  
 }
 
 .campus-card-label {
