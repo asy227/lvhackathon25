@@ -21,7 +21,9 @@ export default function Navbar({ onExpandChange }) {
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      <div className="logo">LOGO</div>
+      <div className="logo">
+        <img src="/logo.png"></img>
+      </div>
 
       <ul className="sidebar-menu">
         <li>
