@@ -1,130 +1,184 @@
+/* === General Layout === */
 .dining-page {
-  position: fixed;
+  position: relative;
   top: 0;
-  color: white;
-  background-color: #1e1e1e;
+  color: #1e1e1e;
+  background-color: #fef3e2; /* warm off-white */
   min-height: 100vh;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   justify-content: flex-start;
   align-items: flex-start;
-  padding: 6rem 2rem 2rem 2rem; /* padding-top leaves room for header */
-  text-align: left;
+  padding: 5.5rem 3rem 3rem 3rem;
   font-family: "Rethink Sans", sans-serif;
   transition: margin-left 0.35s ease-in-out, width 0.35s ease-in-out;
-  margin-left: 100px; /* default sidebar collapsed */
-  width: calc(100% - 140px);
+
+  margin-left: 100px;
+  width: calc(100vw - 100px);
+  box-sizing: border-box;
+  overflow-y: auto;
+  gap: 2.5rem;
 }
 
-/* Move with sidebar expansion */
 .sidebar.expanded ~ .main-content .dining-page {
   margin-left: 200px;
   width: calc(100% - 200px);
 }
 
-/* Titles and Text */
+/* === Left Section === */
+.dining-left {
+  flex: 0 0 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
 .dining-title {
   font-size: 2.2rem;
   color: #6ebec9;
-  margin-bottom: 1.5rem;
   font-weight: 700;
 }
 
-.menu-title,
-.calculator-title {
-  font-size: 1.5rem;
-  color: #97c673;
-  margin-bottom: 1rem;
-}
-
-/* Location Buttons */
-.dining-locations {
+/* === Goals Dropdown === */
+.goals-section {
   display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  margin-bottom: 2rem;
+  flex-direction: column;
 }
 
-.location-btn {
-  background-color: #6ebec9;
-  color: white;
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background-color 0.2s ease, transform 0.1s ease;
-}
-
-.location-btn:hover {
-  background-color: #2d747e;
-  transform: scale(1.03);
-}
-
-.location-btn.active {
-  background-color: #2d747e;
-}
-
-/* Menu Section */
-.menu-section {
-  background: #2c2c2c;
-  padding: 1rem;
-  border-radius: 8px;
-  margin-bottom: 2rem;
-  width: 100%;
-  max-width: 700px;
-}
-
-.menu-list {
-  list-style: none;
-  padding: 0;
-}
-
-.menu-list li {
-  margin-bottom: 0.5rem;
-  font-size: 1rem;
-}
-
-/* Nutrition Calculator */
-.toggle-calculator-btn {
+.goals-dropdown-btn {
   background-color: #97c673;
-  border: none;
   color: white;
-  padding: 0.8rem 1.5rem;
+  padding: 0.7rem 1rem;
+  border: none;
   border-radius: 6px;
   cursor: pointer;
+  font-weight: 600;
+  text-align: left;
   transition: background-color 0.2s ease;
 }
 
-.toggle-calculator-btn:hover {
+.goals-dropdown-btn:hover {
   background-color: #6fa957;
 }
 
-.nutrition-calculator {
-  margin-top: 1rem;
-  background: #2c2c2c;
-  padding: 1rem;
-  border-radius: 8px;
-  width: 100%;
-  max-width: 400px;
-}
-
-.calculator {
+.goals-dropdown {
+  background-color: #a7d6dc;
+  border-radius: 6px;
+  padding: 0.8rem;
+  margin-top: 0.5rem;
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
 }
 
-.calculator input {
-  margin-left: 10px;
-  padding: 0.3rem;
-  border-radius: 4px;
-  border: 1px solid #555;
-  background-color: #1e1e1e;
+/* === Select/Deselect All === */
+.goal-toggle-text {
+  font-size: 1.2rem;
+  cursor: pointer;
+  text-align: left;
+  transition: color 0.2s ease;
+  margin: 0.2rem 0;
+  padding: 0.1rem 0;
+}
+
+.select-all,
+.deselect-all {
+  color: #2d747e;
+  font-weight: 600;
+}
+
+.goal-toggle-text:hover {
+  color: #6ebec9;
+}
+
+/* === Checkbox Options === */
+.goal-option {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: #2d747e;
+  font-size: 1.2rem;
+  margin: 0.3rem 0;
+}
+
+.goal-option input {
+  accent-color: #6ebec9;
+}
+
+/* === Show Recommendations Button === */
+.show-recommendations-btn {
+  background-color: #97c673;
   color: white;
+  padding: 0.7rem 1.4rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.2s ease;
 }
 
-.summary {
-  margin-top: 1rem;
+.show-recommendations-btn:hover {
+  background-color: #6fa957;
+}
+
+/* === Right Section: Top 5 Dining Options === */
+.recommendations-section {
+  flex: 1;
+  background: #ffffff;
+  padding: 2rem;
+  border-radius: 10px;
+  width: 100%;
+  max-width: 900px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+.menu-title {
+  font-size: 1.8rem;
   color: #97c673;
-  font-weight: bold;
+  margin-bottom: 1.2rem;
+  font-weight: 600;
+}
+
+.placeholder-text {
+  color: #555;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.recommendations-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.recommendation-item {
+  background-color: #f1f8f9;
+  color: #2d747e;
+  border-left: 5px solid #6ebec9;
+  padding: 0.8rem 1rem;
+  margin-bottom: 0.8rem;
+  border-radius: 6px;
+  font-size: 1.2rem;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.recommendation-item:hover {
+  background-color: #e0f0f2;
+  transform: scale(1.01);
+}
+
+/* === Responsive === */
+@media (max-width: 900px) {
+  .dining-page {
+    flex-direction: column;
+  }
+
+  .dining-left {
+    flex: 1;
+    max-width: 100%;
+  }
+
+  .recommendations-section {
+    max-width: 100%;
+    margin-top: 2rem;
+  }
 }
