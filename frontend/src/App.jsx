@@ -4,13 +4,6 @@ import ChatBot from "./components/chatbot.jsx";
 import PieChart from "./components/piechart.jsx";
 
 function App() {
-  <root>
-    body {
-  background-color: #fef3e2;
-  margin: 0;
-  padding: 0;
-}
-  </root>
   return (
     <div className="home-page">
       <h1 className="app-title">Welcome to NourishLU 🥗</h1>
@@ -31,9 +24,7 @@ function App() {
             <PieChart />
       </div>
     
-    </div>
-
-    
+    </div> 
 
   );
 }
