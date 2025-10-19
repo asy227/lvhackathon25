@@ -25,27 +25,30 @@ function StudentHeader() {
       </div>
 
       <div
-        className="student-header-right"
-        onMouseEnter={() => setShowDropdown(true)}
-        onMouseLeave={() => setShowDropdown(false)}
-      >
-        <img src="./campuscard.jpg" alt="Campus Card" className="campus-card-img" />
-        <span className="campus-card-label">Your Campus Card</span>
+  className="student-header-right-wrapper"
+  onMouseEnter={() => setShowDropdown(true)}
+  onMouseLeave={() => setShowDropdown(false)}
+>
+  <div className="student-header-right">
+    <img src="./campuscard.jpg" alt="Campus Card" className="campus-card-img" />
+    <span className="campus-card-label">Your Campus Card</span>
+  </div>
 
-        {showDropdown && (
-          <div className="campus-dropdown">
-            <p className="rethink-sans">
-              Meal Swipes: <span style={{ color: "#518629ff", fontWeight: "600" }}>{studentInfo.mealSwipes}</span>
-            </p>
-            <p>
-              Dining Dollars: <span style={{ color: "#518629ff", fontWeight: "600" }}>${studentInfo.diningDollars.toFixed(2)}</span>
-            </p>
-            <p>
-              Clutch Cash: <span style={{ color: "#518629ff", fontWeight: "600" }}>${studentInfo.clutchCash.toFixed(2)}</span>
-            </p>
-          </div>
-        )}
-      </div>
+  {showDropdown && (
+    <div className="campus-dropdown">
+      <h2 className="rethink-sans">
+        Meal Swipes: <span style={{ color: "#376713", fontWeight: "600" }}>{studentInfo.mealSwipes}</span>
+      </h2>
+      <h2>
+        Dining Dollars: <span style={{ color: "#376713", fontWeight: "600" }}>${studentInfo.diningDollars.toFixed(2)}</span>
+      </h2>
+      <h2>
+        Clutch Cash: <span style={{ color: "#376713", fontWeight: "600" }}>${studentInfo.clutchCash.toFixed(2)}</span>
+      </h2>
+    </div>
+  )}
+</div>
+
     </div>
   );
 }
