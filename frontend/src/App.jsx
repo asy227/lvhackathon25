@@ -1,28 +1,20 @@
 import React from "react";
 import "./App.css";
 
-// Import your components
-import NavBar from "./components/navbar.jsx";
-import StudentHeader from "./components/studentHeader.jsx";
-
 function App() {
   return (
-    <div className="app-layout">
-      
+    <div className="home-page">
+      <h1 className="app-title">Welcome to NourishLU 🥗</h1>
 
-      {/* Main content area */}
-      <main
-        style={{
-          marginLeft: "100px", // aligns with collapsed sidebar width
-          marginTop: "100px", // space below StudentHeader
-          padding: "1rem",
-          color: "white",
-        }}
-      >
-        <h1>Welcome to MyApp</h1>
-        <p>This is your main content area.</p>
-        <p>Hover over the sidebar to expand it!</p>
-      </main>
+      <p className="app-description">
+        NourishLU helps Lehigh students make smarter dining choices. View real-time campus dining menus, track your balances, and stay on top of your nutrition.
+      </p>
+
+      <p className="app-description">
+        Snap a photo of your meal and our AI estimates calories and nutrients. You can also tell our chatbot your dietary goals — it’ll suggest the <strong>top 3 dining halls</strong> that best match your needs.
+      </p>
+
+      <p className="app-note">🍽 Eat smart. 🌱 Stay healthy. 🦅 Go Lehigh.</p>
     </div>
   );
 }

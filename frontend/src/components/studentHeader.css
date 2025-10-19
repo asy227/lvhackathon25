@@ -6,7 +6,7 @@ h2 {
 /* ===== Student Header Container ===== */
 .student-header {
   position: fixed;
-  top: 0.5rem;
+  top: 0rem;
   left: 100px; /* start aligned with collapsed sidebar */
   width: calc(100% - 120px); /* fills rest of screen dynamically */
   z-index: 5;
@@ -15,11 +15,9 @@ h2 {
   justify-content: space-between;
   align-items: center;
 
-  background-color: white;
-  color: black;
+  background-color: #97c673;
+  color: white;
   padding: 1.2rem 2rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 
   transition:
     left 0.35s ease-in-out,
@@ -57,14 +55,13 @@ h2 {
 }
 
 .student-header-right:hover {
-  color: #97c673; /* subtle highlight */
+  color: #518629ff; /* subtle highlight */
 }
 
 .campus-card-img {
   width: 90px;
   height: 55px;
   object-fit: cover;
-  border-radius: 6px;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -84,15 +81,16 @@ h2 {
   border-radius: 8px;
   padding: 0.8rem 1rem;
   z-index: 10;
-  width: 220px;
+  width: 230px;
   text-align: left;
-  font-size: 1rem;
+  font-size: 1.4rem;
   animation: dropdownFade 0.25s ease;
   font-family: "Rethink Sans", sans-serif;
 }
 
 .campus-dropdown p {
   margin: 0.4rem 0;
+  text-align: left;
 }
 
 /* Simple fade-in animation for dropdown */

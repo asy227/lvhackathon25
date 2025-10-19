@@ -7,6 +7,8 @@ import "./index.css";
 import Layout from "./components/Layout.jsx";  // 👈 we'll make this below
 import App from "./App.jsx";                   // Home page
 import DiningServices from "./pages/DiningServices.jsx"; // Dining page
+import MealPicker from "./pages/MealPicker.jsx"; // Dining page
+
 
 const router = createBrowserRouter([
   {
@@ -15,6 +17,7 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <App /> },          // Home page
       { path: "dining", element: <DiningServices /> }, // Dining page
+      { path: "mealpicker", element: <MealPicker /> }, // Dining page
     ],
   },
 ]);

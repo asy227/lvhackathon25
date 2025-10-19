@@ -1,42 +1,46 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+.home-page {
+  position: fixed;
+  top: 0;
+  color: white;
+  background-color: #fef3e2;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start; /* 👈 move content toward the top */
+  align-items: flex-start;
+  padding: 8rem 2rem 2rem 2rem; /* 👈 adjust top spacing here */
+  text-align: left;
+  font-family: "Rethink Sans", sans-serif;
+  transition: margin-left 0.35s ease-in-out, width 0.35s ease-in-out;
+  margin-left: 100px;
+  width: calc(100% - 140px);
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+
+/* When sidebar expands */
+.sidebar.expanded ~ .main-content .home-page {
+  margin-left: 200px;
+  width: calc(100% - 200px);
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.app-title {
+  font-size: 2.2rem;
+  color: #97c673;
+  margin-bottom: 1rem;
+  font-weight: 700;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+.app-description {
+  max-width: 700px;
+  font-size: 1.05rem;
+  line-height: 1.6;
+  margin-bottom: 0.8rem;
+  color: #255e15;
 }
 
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
+.app-note {
+  margin-top: 1.5rem;
+  font-size: 1rem;
+  color: #97c673;
+  font-weight: 600;
 }
