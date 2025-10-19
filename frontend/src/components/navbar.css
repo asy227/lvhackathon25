@@ -1,13 +1,4 @@
-
-/*Crisp Image*/
-img {
-  image-rendering: crisp-edges;
-  -webkit-optimize-contrast: optimize-contrast; /* helps on Safari */
-  object-fit: contain;
-}
-
-
-/* ===== Sidebar Container ===== */
+/* ===== Sidebar Core ===== */
 .sidebar {
   height: 100vh;
   width: 100px;
@@ -15,7 +6,8 @@ img {
   color: white;
   display: flex;
   flex-direction: column;
-  align-items: center; /* keeps everything centered horizontally */
+  align-items: center;
+  justify-content: space-between; /* top + bottom alignment */
   position: fixed;
   top: 0;
   left: 0;
@@ -23,117 +15,88 @@ img {
   overflow: hidden;
 }
 
-/* Expanded state */
 .sidebar.expanded {
   width: 200px;
 }
 
-/* ===== Logo ===== */
-.logo {
-  width: 100%;
-  text-align: center;
-  font-size: 1.3rem;
-  font-weight: bold;
-  margin: 1.5rem 0 2rem 0;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-/* ===== Menu Section ===== */
+/* ===== Sidebar Menu ===== */
 .sidebar-menu {
   flex-grow: 1;
   display: flex;
   flex-direction: column;
-  align-items: center; /* icons centered horizontally */
+  align-items: center;
   list-style: none;
   padding: 0;
   margin: 0;
   width: 100%;
-  transition: all 0.3s ease;
 }
 
-/* Menu items */
+/* Each menu item */
 .sidebar-menu li {
   width: 100%;
-  display: flex;
-  justify-content: center; /* icons centered */
   margin: 12px 0;
-  transition: transform 0.3s ease;
+  display: flex;
+  justify-content: center;
 }
 
-/* ===== Links ===== */
+/* ===== Link Styling ===== */
 .sidebar-menu a {
   display: flex;
   align-items: center;
+  justify-content: center; /* Center icon when collapsed */
   text-decoration: none;
   color: white;
   font-size: 1.1rem;
-  transition: background-color 0.25s ease;
   padding: 8px;
   border-radius: 8px;
-  width: 100%; /* makes hover background not touch edges */
-  justify-content: center; /* icons centered when collapsed */
-  overflow: hidden;
+  width: 85%;
+  transition: all 0.3s ease;
 }
 
-
-.sidebar-menu a:hover {
-  background-color: #527a33;
-}
-
+.sidebar-menu a:hover,
 .sidebar-menu a.active {
   background-color: #527a33;
 }
 
-
-/* ===== Icons ===== */
-.icon {
-  font-size: 2rem;
-  min-width: 40px; /* ensures consistent spacing */
-  text-align: center;
-  transition: transform 0.25s ease-in-out;
+/* Expanded state: align icons + text left */
+.sidebar.expanded .sidebar-menu a {
+  justify-content: flex-start;
+  padding-left: 20px;
 }
 
+/* ===== Icons ===== */
+.sidebar img,
+.logout-icon,
+.home-icon,
+.meal-picker {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  display: inline-block;
+  flex-shrink: 0;
+  transition: transform 0.3s ease;
+}
 
-/* ===== Labels ===== */
+.sidebar.expanded .sidebar-menu img {
+  transform: translateX(3px);
+}
+
+/* ===== Label (Text) ===== */
 .label {
   opacity: 0;
   max-width: 0;
   overflow: hidden;
   white-space: nowrap;
   margin-left: 10px;
-  transition:
-    opacity 0.25s ease-out,
-    max-width 0.25s ease-out,
-    margin 0.25s ease-out;
-  flex-shrink: 0; /* prevent text from shrinking */
-}
-
-/* ===== Expanded State ===== */
-.sidebar.expanded .sidebar-menu a {
-  justify-content: flex-start; /* text + icon align left */
+  transition: all 0.3s ease;
 }
 
 .sidebar.expanded .label {
-  text-overflow: ellipsis;
   opacity: 1;
-  overflow: hidden;
   max-width: 140px;
-  transition:
-    opacity 0.25s ease-out,
-    max-width 0.25s ease-out,
-    margin 0.25s ease-out;
 }
 
-/* Optional smooth slide for icon group */
-.sidebar.expanded .icon {
-  transform: translateX(4px);
-  transition: transform 0.25s ease-out;
-
-}
-
-
-/* ===== Footer Section ===== */
+/* ===== Footer (Logout) ===== */
 .sidebar-footer {
   width: 100%;
   padding: 10px 0;
@@ -142,90 +105,31 @@ img {
   margin-bottom: 20px;
 }
 
-/* Position footer at bottom */
-.sidebar {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between; /* logo+menu on top, footer on bottom */
-  transition: width 0.35s ease-in-out;
-}
-
-/* Logout button styling */
 .logout-btn {
   background: none;
   border: none;
-  outline: none; 
   color: white;
-  font-size: 1.1rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
+  font-size: 1.1rem;
   cursor: pointer;
   padding: 9px;
   border-radius: 8px;
-  transition: background-color 0.25s ease;
+  transition: all 0.3s ease;
+  width: 85%;
 }
 
-.logout-btn:focus {
-  outline: none; /* ensures it doesn’t come back on click */
-}
 .logout-btn:hover {
   background-color: #527a33;
 }
 
 .sidebar.expanded .logout-btn {
   justify-content: flex-start;
-  padding-left: 0px;
+  padding-left: 20px;
 }
 
 .sidebar.expanded .logout-btn .label {
   opacity: 1;
-  max-width: 200px;
+  max-width: 140px;
 }
-
-.logout-btn .icon {
-  font-size: 2rem;
-  transition: transform 0.3s ease;
-  
-}
-
-.sidebar.expanded .logout-btn .icon {
-  transform: translateX(3px);
-}
-
-.logout-icon {
-  width: 40px;  /* 🔥 controls size */
-  height: 40px; /* keep it square */
-  object-fit: contain; /* prevents stretching */
-  margin-right: 0px; /* default: no margin */
-  margin-top: 0px;
-  transition: transform 0.3s ease;
-}
-
-.home-icon {
-  width: 40px;  /* 🔥 controls size */
-  height: 40px; /* keep it square */
-  object-fit: contain; /* prevents stretching */
-  margin-right: 0px; /* default: no margin */
-  margin-top: 0px;
-  transition: transform 0.3s ease;
-}
-
-.meal-picker {
-  width: 40px;  /* 🔥 controls size */
-  height: 40px; /* keep it square */
-  object-fit: contain; /* prevents stretching */
-  margin-right: 0px; /* default: no margin */
-  margin-top: 0px;
-  transition: transform 0.3s ease;
-}
-
-/* Slight right shift when expanded */
-.sidebar.expanded .logout-icon {
-  margin-left: 15px;
-  transform: translateX(3px);
-}
-
-
-
