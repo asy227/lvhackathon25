@@ -203,6 +203,24 @@ img {
   transition: transform 0.3s ease;
 }
 
+.home-icon {
+  width: 40px;  /* 🔥 controls size */
+  height: 40px; /* keep it square */
+  object-fit: contain; /* prevents stretching */
+  margin-right: 0px; /* default: no margin */
+  margin-top: 0px;
+  transition: transform 0.3s ease;
+}
+
+.meal-picker {
+  width: 40px;  /* 🔥 controls size */
+  height: 40px; /* keep it square */
+  object-fit: contain; /* prevents stretching */
+  margin-right: 0px; /* default: no margin */
+  margin-top: 0px;
+  transition: transform 0.3s ease;
+}
+
 /* Slight right shift when expanded */
 .sidebar.expanded .logout-icon {
   margin-left: 15px;
