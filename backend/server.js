@@ -12,8 +12,19 @@ const { Pool } = require('pg');  //  PostgreSQL client for connecting and queryi
 const app = express();  //  Creates an instance of the Express application
 const PORT = process.env.PORT || 3000;  //  Defines which port the backend listens on (default 3000)
 
+//  --------------- Custom Functions ---------------
+const { calculateNutrition } = require('./functions/nutritionRec.js');  // For '/api/recommend-meals'
+const { generateResponse } = require('./functions/chatbot_functions');  //  Imports chatbot logic from external module
+
 app.use(cors());  //  Allows frontend requests from different origins (e.g., React app on port 5173)
 app.use(express.json());  //  Parses incoming JSON payloads from POST/PUT requests into req.body
+
+
+
+
+
+
+
 
 
 
@@ -30,7 +41,6 @@ app.use(express.json());  //  Parses incoming JSON payloads from POST/PUT reques
  * The database uses AWS RDS (PostgreSQL), and the chatbot logic is imported
  * from an external helper file located in `/functions/chatbot_functions.js`.
  */
-
 //  --------------- Database Connection Pool ---------------
 const pool = new Pool({
     host: process.env.DB_HOST,  //  The hostname or endpoint of the RDS PostgreSQL instance
@@ -44,8 +54,11 @@ const pool = new Pool({
 });
 
 
-//  --------------- Chatbot Functions (Groq API Integration) ---------------
-const { generateResponse } = require('./functions/chatbot_functions');  //  Imports chatbot logic from external module
+
+
+
+
+
 
 
 
@@ -53,7 +66,7 @@ const { generateResponse } = require('./functions/chatbot_functions');  //  Impo
 // 3. Backend Routes
 // ============================================================================================================
 
-//  --------------- Root Endpoint ---------------
+//  --------------- Root Endpoint and Health Check Route ---------------
 /**
  * @route GET /
  * @description Basic route that confirms the backend is running.
@@ -65,8 +78,6 @@ app.get('/', (req, res) => {
     res.send('<h1>NourishLU Backend Running</h1>');
 });
 
-
-//  --------------- Health Check Route ---------------
 /**
  * @route GET /api/health
  * @description Basic health check for backend service status.
@@ -107,10 +118,57 @@ app.get('/api/db-test', async (req, res) => {
 });
 
 
+// --------------- Create New User Route ---------------
+/**
+ * @route POST /api/users
+ * @description Adds a new user with personal and nutrition-related info
+ * @body {string} name - User's name
+ * @body {number} height_cm - Height in centimeters
+ * @body {number} weight_kg - Weight in kilograms
+ * @body {number} age - Age in years
+ * @body {string} gender - 'male' or 'female'
+ * @body {string} activity_level - 'low', 'moderate', or 'high'
+ * @body {string} goal - 'lose', 'maintain', or 'gain'
+ */
+app.post('/api/users', async (req, res) => {
+  try {
+    const { name, height_cm, weight_kg, age, gender, activity_level, goal } = req.body;
 
-const { calculateNutrition } = require('./functions/nutritionRec.js');
+    // 1️ Validate input
+    if (!name || !height_cm || !weight_kg || !age || !gender || !activity_level || !goal) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
 
-// --------------- Meal Recommendation Route ---------------
+    // 2️ Insert user into database
+    const insertQuery = `
+      INSERT INTO users (name, height_cm, weight_kg, age, gender, activity_level, goal)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      RETURNING user_id, name, height_cm, weight_kg, age, gender, activity_level, goal;
+    `;
+
+    const result = await pool.query(insertQuery, [
+      name,
+      height_cm,
+      weight_kg,
+      age,
+      gender.toLowerCase(),
+      activity_level.toLowerCase(),
+      goal.toLowerCase(),
+    ]);
+
+    // 3️ Return newly created user info
+    res.status(201).json({
+      message: 'User successfully created',
+      user: result.rows[0],
+    });
+  } catch (err) {
+    console.error('Error creating user:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+
+// --------------- User Nutrition Routes ---------------
 /**
  * @route GET /api/recommend-meals
  * @description Suggests meals that match a user's nutrition needs
@@ -181,57 +239,80 @@ app.get('/api/recommend-meals', async (req, res) => {
   }
 });
 
-
-
-// --------------- Create New User Route ---------------
 /**
- * @route POST /api/users
- * @description Adds a new user with personal and nutrition-related info
- * @body {string} name - User's name
- * @body {number} height_cm - Height in centimeters
- * @body {number} weight_kg - Weight in kilograms
- * @body {number} age - Age in years
- * @body {string} gender - 'male' or 'female'
- * @body {string} activity_level - 'low', 'moderate', or 'high'
- * @body {string} goal - 'lose', 'maintain', or 'gain'
+ * @description
+ * Calculates daily nutritional recommendations based on user profile data from the frontend.
+ * The endpoint expects gender, age, weight, height, and activityLevel in the request body.
+ * It computes Basal Metabolic Rate (BMR), applies an activity multiplier to estimate
+ * Total Daily Energy Expenditure (TDEE), and returns a macronutrient breakdown.
+ *
+ * @route POST /api/calculate-nutrition
+ * @returns {Object} JSON response containing kcal, fat (g), protein (g), and carbs (g)
+ * 
+ * @example
+ * Request:
+ * {
+ *   "gender": "male",
+ *   "age": "25",
+ *   "weight": "70",
+ *   "height": "170",
+ *   "activityLevel": "moderate"
+ * }
+ *
+ * Response:
+ * {
+ *   "kcal": 2308,
+ *   "fat": 77,
+ *   "protein": 144,
+ *   "carbs": 260
+ * }
  */
-app.post('/api/users', async (req, res) => {
-  try {
-    const { name, height_cm, weight_kg, age, gender, activity_level, goal } = req.body;
+app.post('/api/calculate-nutrition', (req, res) => {
+    // Extract fields from frontend dropdowns
+    const { gender, age, weight, height, activityLevel } = req.body;
 
-    // 1️ Validate input
-    if (!name || !height_cm || !weight_kg || !age || !gender || !activity_level || !goal) {
-      return res.status(400).json({ error: 'Missing required fields' });
+    // Default safety checks
+    if (!gender || !age || !weight || !height || !activityLevel) {
+        return res.status(400).json({ error: "Missing required fields." });
     }
 
-    // 2️ Insert user into database
-    const insertQuery = `
-      INSERT INTO users (name, height_cm, weight_kg, age, gender, activity_level, goal)
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
-      RETURNING user_id, name, height_cm, weight_kg, age, gender, activity_level, goal;
-    `;
+    // Convert values to numbers
+    const w = parseFloat(weight);
+    const h = parseFloat(height);
+    const a = parseFloat(age);
 
-    const result = await pool.query(insertQuery, [
-      name,
-      height_cm,
-      weight_kg,
-      age,
-      gender.toLowerCase(),
-      activity_level.toLowerCase(),
-      goal.toLowerCase(),
-    ]);
+    // Basal Metabolic Rate (BMR)
+    let bmr;
+    if (gender === "male") {
+        bmr = 10 * w + 6.25 * h - 5 * a + 5;
+    } else {
+        bmr = 10 * w + 6.25 * h - 5 * a - 161;
+    }
 
-    // 3️ Return newly created user info
-    res.status(201).json({
-      message: 'User successfully created',
-      user: result.rows[0],
-    });
-  } catch (err) {
-    console.error('Error creating user:', err);
-    res.status(500).json({ error: 'Server error' });
-  }
+    // Activity level multipliers
+    const activityMultipliers = {
+        sedentary: 1.2,
+        light: 1.375,
+        moderate: 1.55,
+        active: 1.725,
+        very_active: 1.9
+    };
+
+    // Total Daily Energy Expenditure (TDEE)
+    const multiplier = activityMultipliers[activityLevel] || 1.55;
+    const tdee = bmr * multiplier;
+
+    // Macronutrient breakdown
+    const resBody = {
+        kcal: Math.round(tdee),
+        fat: Math.round((tdee * 0.30) / 9),
+        protein: Math.round((tdee * 0.25) / 4),
+        carbs: Math.round((tdee * 0.45) / 4)
+    };
+
+    // Return result
+    res.json(resBody);
 });
-
 
 
 //  --------------- Chatbot Endpoint ---------------
@@ -313,81 +394,11 @@ app.post('/api/chat', async (req, res) => {
 });
 
 
-// --------------- Generate Nutritional Information ---------------
-/**
- * @description
- * Calculates daily nutritional recommendations based on user profile data from the frontend.
- * The endpoint expects gender, age, weight, height, and activityLevel in the request body.
- * It computes Basal Metabolic Rate (BMR), applies an activity multiplier to estimate
- * Total Daily Energy Expenditure (TDEE), and returns a macronutrient breakdown.
- *
- * @route POST /api/calculate-nutrition
- * @returns {Object} JSON response containing kcal, fat (g), protein (g), and carbs (g)
- * 
- * @example
- * Request:
- * {
- *   "gender": "male",
- *   "age": "25",
- *   "weight": "70",
- *   "height": "170",
- *   "activityLevel": "moderate"
- * }
- *
- * Response:
- * {
- *   "kcal": 2308,
- *   "fat": 77,
- *   "protein": 144,
- *   "carbs": 260
- * }
- */
-app.post('/api/calculate-nutrition', (req, res) => {
-    // Extract fields from frontend dropdowns
-    const { gender, age, weight, height, activityLevel } = req.body;
 
-    // Default safety checks
-    if (!gender || !age || !weight || !height || !activityLevel) {
-        return res.status(400).json({ error: "Missing required fields." });
-    }
 
-    // Convert values to numbers
-    const w = parseFloat(weight);
-    const h = parseFloat(height);
-    const a = parseFloat(age);
 
-    // Basal Metabolic Rate (BMR)
-    let bmr;
-    if (gender === "male") {
-        bmr = 10 * w + 6.25 * h - 5 * a + 5;
-    } else {
-        bmr = 10 * w + 6.25 * h - 5 * a - 161;
-    }
 
-    // Activity level multipliers
-    const activityMultipliers = {
-        sedentary: 1.2,
-        light: 1.375,
-        moderate: 1.55,
-        active: 1.725,
-        very_active: 1.9
-    };
 
-    // Total Daily Energy Expenditure (TDEE)
-    const multiplier = activityMultipliers[activityLevel] || 1.55;
-    const tdee = bmr * multiplier;
-
-    // Macronutrient breakdown
-    const resBody = {
-        kcal: Math.round(tdee),
-        fat: Math.round((tdee * 0.30) / 9),
-        protein: Math.round((tdee * 0.25) / 4),
-        carbs: Math.round((tdee * 0.45) / 4)
-    };
-
-    // Return result
-    res.json(resBody);
-});
 
 
 
