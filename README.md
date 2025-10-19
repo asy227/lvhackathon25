@@ -1,119 +1,155 @@
-# Lehigh Valley Hackathon 2025  
+# Lehigh Valley Hackathon 2025
 
-## NourishLU – Full Stack Dining & Nutrition Assistant  
+## NourishLU – Full-Stack Dining & Nutrition Assistant
 
-### Overview  
-**NourishLU** is a web-based application that helps Lehigh University students discover on-campus dining options, filter by dietary restrictions, and receive personalized meal recommendations through an AI chatbot.  
+### Overview
+**NourishLU** is a web application that helps Lehigh University students make smarter on-campus dining choices.  
+It integrates meal data, nutrition analytics, and AI-driven recommendations to support students with diverse dietary goals.
 
-The system integrates a **React + Vite** frontend, a **Node.js + Express** backend, a **PostgreSQL (AWS RDS)** database, and an **AI model served via Groq API**.  
-
----
-
-## Frontend – NourishLU Web Client  
-
-### Overview  
-The frontend is built with **React** and **Vite**, providing the interactive interface for browsing dining halls, meals, and chatbot recommendations.  
-It communicates with the backend REST API over HTTP using fetch requests.  
+Built with a **React + Vite** frontend, **Node.js + Express** backend, **PostgreSQL (AWS RDS)** database, and **Groq LLM integration**, the system combines usability, performance, and real-time intelligence.
 
 ---
 
-### Running Locally  
-1. Navigate to the frontend directory  
-   **cd frontend**  
-2. Install dependencies  
-   **npm install**  
-3. Start the development server  
-   **npm run dev**  
-4. Open in browser  
-   **http://localhost:5173**  
+## 1. Frontend – NourishLU Web Client
 
-> The frontend runs on port 5173 and communicates with the backend on port 3000.  
+### Overview
+The frontend is developed in **React (Vite)** for rapid rendering and modular component management.  
+It provides interactive features for:
+- Selecting dietary goals
+- Viewing personalized meal recommendations
+- Chatting with the AI nutrition assistant
+- Displaying dynamic nutrition visualizations
 
----
-
-### Building for Production  
-Run the following command to generate optimized static assets:  
-**npm run build**  
-
-The build output is stored in the **dist/** folder and can be hosted via **Nginx** or another web server.  
+Frontend communicates with backend REST APIs over HTTP (port 5173 → 3000).
 
 ---
 
-## Backend – NourishLU API  
+### Running Locally
+cd frontend  
+npm install  
+npm run dev  
 
-### Overview  
-The backend provides API endpoints, connects to a **PostgreSQL (AWS RDS)** database, and integrates with the **Groq API** for chatbot responses.  
-It is written in **Node.js (Express)** and runs locally on port **3000**.  
+Open in your browser at **http://localhost:5173**
 
----
-
-### Running Locally  
-1. Navigate to the backend directory  
-   **cd backend**  
-2. Install dependencies  
-   **npm install**  
-3. Copy the example environment file  
-   **cp .env.example .env**  
-4. Start the development server  
-   **npm run dev**  
-5. Test the database connection  
-   **http://localhost:3000/api/db-test**  
+> The frontend automatically connects to the backend API on **http://localhost:3000**.
 
 ---
 
-### Environment Setup  
-The backend requires a `.env` file with variables:  
-`PORT`, `DB_HOST`, `DB_USER`, `DB_PASS`, `DB_NAME`, `DB_PORT`, `GROQ_API_KEY`, `LLM_MODEL`.  
+### Building for Production
+npm run build  
 
-> `.env` is excluded from version control for security.  
-
----
-
-### API Endpoints  
-- **/api/health** – Service check  
-- **/api/db-test** – Verify database connection  
-- **/api/chat** – AI chatbot using Groq API  
+The optimized output is generated in the **dist/** folder.  
+It can be served via **Nginx** or any static file host.
 
 ---
 
-## Deployment & Infrastructure  
+## 2. Backend – NourishLU API
 
-### Overview  
-The application is deployed on an **Amazon EC2** instance running **Amazon Linux 2023**, connected to an **AWS RDS Aurora PostgreSQL** cluster within the same VPC.  
+### Overview
+The backend powers all application logic, including:
+- Meal recommendation engine
+- Nutrition calculation (BMR + TDEE)
+- Chatbot responses through Groq LLMs
+- Database integration with PostgreSQL (AWS RDS)
+
+It is implemented in **Node.js (Express)** and listens on port **3000**.
+
+---
+
+### Running Locally
+cd backend  
+npm install  
+cp .env.example .env  
+npm run dev  
+
+Verify database connection:  
+http://localhost:3000/api/db-test
+
+---
+
+### Environment Variables
+Required `.env` fields:  
+PORT=  
+DB_HOST=  
+DB_USER=  
+DB_PASS=  
+DB_NAME=  
+DB_PORT=  
+GROQ_API_KEY=  
+LLM_MODEL=  
+
+> The `.env` file is excluded from version control for security.
+
+---
+
+### API Endpoints
+| Endpoint | Method | Description |
+|-----------|---------|-------------|
+| /api/health | GET | Verify service status |
+| /api/db-test | GET | Confirm database connectivity |
+| /api/chat | POST | AI chatbot (Groq API) |
+| /api/calculate-nutrition | POST | Nutrition goal computation |
+| /api/recommend-meals | POST | Dynamic meal recommendation engine |
+
+---
+
+## 3. Deployment & Infrastructure
+
+### Overview
+The full application stack runs on **Amazon EC2 (Amazon Linux 2023)** with a private **AWS RDS Aurora PostgreSQL** instance.  
+The architecture ensures secure, low-latency communication between backend and database within the same VPC.
 
 **Traffic Flow:**  
-Frontend → Nginx (port 80/443) → Node.js Backend (port 3000) → PostgreSQL (port 5432)  
+Frontend → Nginx (80/443) → Node.js Backend (3000) → PostgreSQL (5432)
 
 ---
 
-### Deployment Process  
-1. SSH into the EC2 instance:  
-   **ssh -i "<key.pem>" ec2-user@<server-address>**  
-2. Pull the latest changes:  
-   **git pull origin main**  
-3. Redeploy backend:  
-   **deploy_backend.sh**  
+### Deployment Process
+ssh -i "<key.pem>" ec2-user@<server-address>  
+git pull origin main  
+./deploy_backend.sh  
+
+`deploy_backend.sh` automates pulling the latest code, installing dependencies, rebuilding the frontend, and restarting the backend service.
 
 ---
 
-### Nginx Configuration  
-- Frontend served from `/var/www/nourishlu`  
-- Backend requests proxied to **http://127.0.0.1:3000**  
-- SSL managed with **Let’s Encrypt (Certbot)**  
-- HTTP redirects to HTTPS  
+### Nginx Configuration
+- Frontend served from /var/www/nourishlu  
+- Backend proxied to http://127.0.0.1:3000  
+- SSL managed via **Let’s Encrypt (Certbot)**  
+- All HTTP requests redirect to HTTPS
 
 ---
 
-### Security Notes  
-- `.env`, `.pem`, and build files excluded via `.gitignore`  
-- HTTPS encryption enabled  
-- EC2 ↔ RDS connection restricted to private VPC and approved IPs  
+### Security & Access Control
+- `.env`, `.pem`, and build directories are excluded via `.gitignore`  
+- HTTPS enforced through SSL certificates  
+- RDS accessible only within the EC2 VPC and approved IP addresses
 
 ---
 
-### Summary  
-- **Frontend:** React + Vite served through Nginx  
-- **Backend:** Node.js + Express + Groq API chatbot  
-- **Database:** AWS RDS Aurora PostgreSQL  
-- **Hosting:** Amazon EC2 with SSL (Let’s Encrypt)  
-- **Deployment:** Automated via `deploy_backend.sh`
+## 4. Technical Summary
+| Layer | Technology | Responsibilities |
+|--------|-------------|------------------|
+| **Frontend** | React (Vite), Recharts | User interface, chatbot, and visualization |
+| **Backend** | Node.js (Express) | API endpoints, logic, and AI integration |
+| **Database** | AWS RDS PostgreSQL | Structured meal and nutrition data |
+| **AI Model** | Groq API (LLaMA-3.1) | Natural-language meal recommendations |
+| **Deployment** | EC2 + Dokku + Nginx | Hosting, SSL, and CI automation |
+
+---
+
+### Summary Statement
+NourishLU is a full-stack, production-ready prototype demonstrating:  
+- Real-time AI-powered dietary recommendations  
+- Campus-specific data integration  
+- Scalable AWS deployment with secure infrastructure  
+- Clean and maintainable architecture for future expansion
+
+---
+
+### Optional Enhancements (Future Work)
+- User preference persistence (no authentication required) 
+- Real-time dining hall menu scraping from Lehigh Dining API
+- Mobile-responsive companion app
+- Enhanced AI meal reasoning (nutrition + cost trade-offs)
