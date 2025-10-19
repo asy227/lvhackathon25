@@ -21,32 +21,43 @@ export default function Navbar({ onExpandChange }) {
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
+      {/* Logo Section */}
       <div className="logo">
-        <img src="/logo.png"></img>
+        <img src="/logo.png" alt="NourishLU Logo" className="logo-icon" />
       </div>
 
+      {/* Sidebar Navigation Links */}
       <ul className="sidebar-menu">
         <li>
-          <NavLink to="/" end className={({ isActive }) => (isActive ? "active" : "")}>
-            {/* <span className="icon">🏠</span> */}
-            <img src="/homeicon.png" alt="home" className="home-icon" />
+          <NavLink
+            to="/"
+            end
+            className={({ isActive }) => (isActive ? "active" : "")}
+          >
+            <img src="/homeicon.png" alt="Home" className="home-icon" />
             <span className="label">Home</span>
           </NavLink>
         </li>
 
         <li>
-          <NavLink to="/dining" className={({ isActive }) => (isActive ? "active" : "")}>
-            {/* <span className="icon">📅</span> */}
-            <img src="/mealpickericon.png" alt="meal" className="meal-picker" />
+          <NavLink
+            to="/dining"
+            className={({ isActive }) => (isActive ? "active" : "")}
+          >
+            <img
+              src="/mealpickericon.png"
+              alt="Dining Services"
+              className="meal-picker"
+            />
             <span className="label">Dining Services</span>
           </NavLink>
         </li>
-
       </ul>
 
+      {/* Footer Section (Logout) */}
       <div className="sidebar-footer">
         <button className="logout-btn">
-          <img src="/logoutIcon.png" alt="Logout" className="logout-icon" />
+          <img src="/logouticon.png" alt="Logout" className="logout-icon" />
           <span className="label">Logout</span>
         </button>
       </div>
