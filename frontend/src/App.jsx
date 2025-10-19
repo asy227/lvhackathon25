@@ -8,11 +8,7 @@ import StudentHeader from "./components/studentHeader.jsx";
 function App() {
   return (
     <div className="app-layout">
-      {/* Sidebar */}
-      <NavBar />
-
-      {/* Top header */}
-      <StudentHeader />
+      
 
       {/* Main content area */}
       <main

@@ -1,50 +1,64 @@
 import { useState } from "react";
+import { NavLink } from "react-router-dom";
 import "./navbar.css";
 
-export default function Navbar() {
+export default function Navbar({ onExpandChange }) {
   const [expanded, setExpanded] = useState(false);
+
+  const handleMouseEnter = () => {
+    setExpanded(true);
+    onExpandChange?.(true);
+  };
+
+  const handleMouseLeave = () => {
+    setExpanded(false);
+    onExpandChange?.(false);
+  };
 
   return (
     <div
       className={`sidebar ${expanded ? "expanded" : ""}`}
-      onMouseEnter={() => setExpanded(true)}
-      onMouseLeave={() => setExpanded(false)}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
     >
       <div className="logo">LOGO</div>
+
       <ul className="sidebar-menu">
         <li>
-          <a href="#">
+          <NavLink to="/" end className={({ isActive }) => (isActive ? "active" : "")}>
             <span className="icon">🏠</span>
             <span className="label">Home</span>
-          </a>
+          </NavLink>
         </li>
+
         <li>
-          <a href="#">
+          <NavLink to="/dining" className={({ isActive }) => (isActive ? "active" : "")}>
             <span className="icon">📅</span>
             <span className="label">Dining Services</span>
-          </a>
+          </NavLink>
         </li>
+
         <li>
-          <a href="#">
+          <NavLink to="/team" className={({ isActive }) => (isActive ? "active" : "")}>
             <span className="icon">👥</span>
             <span className="label">Team</span>
-          </a>
+          </NavLink>
         </li>
+
         <li>
-          <a href="#">
+          <NavLink to="/register" className={({ isActive }) => (isActive ? "active" : "")}>
             <span className="icon">📝</span>
             <span className="label">Register</span>
-          </a>
+          </NavLink>
         </li>
       </ul>
 
-        
       <div className="sidebar-footer">
-      <button className="logout-btn">
-        <img src="./logoutIcon.png" alt="Logout" className="logout-icon" />
-        <span className="label">Logout</span>
-      </button>
-    </div>
+        <button className="logout-btn">
+          <img src="/logoutIcon.png" alt="Logout" className="logout-icon" />
+          <span className="label">Logout</span>
+        </button>
+      </div>
     </div>
   );
 }
