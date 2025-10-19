@@ -41,7 +41,7 @@ export default function Navbar() {
         
       <div className="sidebar-footer">
       <button className="logout-btn">
-        <img src="../../imgs/logoutIcon.png" alt="Logout" className="logout-icon" />
+        <img src="./logoutIcon.png" alt="Logout" className="logout-icon" />
         <span className="label">Logout</span>
       </button>
     </div>

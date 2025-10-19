@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./studentHeader.css";
-import profileIcon from "../../imgs/profile.webp";
-import campusCard from "../../imgs/campuscard.jpg";
+
 
 function StudentHeader() {
   const [showDropdown, setShowDropdown] = useState(false);
@@ -23,7 +22,7 @@ function StudentHeader() {
   return (
     <div className="student-header">
       <div className="student-header-left">
-        <img src={profileIcon} alt="Profile" className="profile-icon" />
+        <img src="profile.webp" alt="Profile" className="profile-icon" />
         <h2>Hi, FName LName!</h2>
       </div>
 
@@ -32,7 +31,7 @@ function StudentHeader() {
         onMouseEnter={() => setShowDropdown(true)}
         onMouseLeave={() => setShowDropdown(false)}
       >
-        <img src={campusCard} alt="Campus Card" className="campus-card-img" />
+        <img src="./campuscard.jpg" alt="Campus Card" className="campus-card-img" />
         <span className="campus-card-label">Campus Card</span>
 
         {showDropdown && (
