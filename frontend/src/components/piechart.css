@@ -1,0 +1,154 @@
+.piechart-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.user-input-section {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.user-input-section h3 {
+    margin-top: 0;
+    color: #333;
+    margin-bottom: 15px;
+}
+
+.input-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.input-group label {
+    font-weight: 600;
+    margin-bottom: 5px;
+    color: #555;
+}
+
+.input-group input,
+.input-group select {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 14px;
+}
+
+.input-group input:focus,
+.input-group select:focus {
+    outline: none;
+    border-color: #4CAF50;
+}
+
+.results-summary {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.results-summary h3 {
+    margin-top: 0;
+    color: #333;
+}
+
+.nutrient-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.nutrient-card {
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+    color: white;
+}
+
+.nutrient-card.calories {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.nutrient-card.protein {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.nutrient-card.carbs {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.nutrient-card.fat {
+    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+}
+
+.nutrient-card h4 {
+    margin: 0 0 5px 0;
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+.nutrient-card p {
+    margin: 0;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.piechart-section {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.piechart-section h3 {
+    margin-top: 0;
+    color: #333;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.custom-tooltip {
+    background: white;
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.custom-tooltip .label {
+    font-weight: bold;
+    margin: 0;
+}
+
+.custom-tooltip .desc {
+    margin: 5px 0 0 0;
+    color: #666;
+    font-size: 12px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .piechart-container {
+        padding: 10px;
+    }
+    
+    .input-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .nutrient-cards {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}

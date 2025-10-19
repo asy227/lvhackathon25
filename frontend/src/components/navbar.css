@@ -11,7 +11,7 @@ img {
 .sidebar {
   height: 100vh;
   width: 100px;
-  background-color: #262626;
+  background-color: #276533;
   color: white;
   display: flex;
   flex-direction: column;
@@ -80,6 +80,11 @@ img {
 .sidebar-menu a:hover {
   background-color: #354c38;
 }
+
+.sidebar-menu a.active {
+  background-color: #354c38;
+}
+
 
 /* ===== Icons ===== */
 .icon {
