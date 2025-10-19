@@ -15,7 +15,15 @@ function App() {
       </p>
 
       <p className="app-note">🍽 Eat smart. 🌱 Stay healthy. 🦅 Go Lehigh.</p>
+
+      <div classname = "chatbot">
+            <ChatBot />
+      </div>
+    
     </div>
+
+    
+
   );
 }
 
