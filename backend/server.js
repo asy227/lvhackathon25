@@ -66,6 +66,18 @@ app.get('/', (req, res) => {
 });
 
 
+//  --------------- Health Check Route ---------------
+/**
+ * @route GET /api/health
+ * @description Basic health check for backend service status.
+ * @returns {JSON} Service confirmation.
+ */
+app.get('/api/health', (req, res) => {
+    // Return backend status confirmation for uptime checks
+    res.json({ status: 'ok', service: 'nourishlu-backend' });
+});
+
+
 //  --------------- Database Testing Route ---------------
 /**
  * @route GET /api/db-test
@@ -93,6 +105,133 @@ app.get('/api/db-test', async (req, res) => {
         });
     }
 });
+
+
+
+const { calculateNutrition } = require('./functions/nutritionRec.js');
+
+// --------------- Meal Recommendation Route ---------------
+/**
+ * @route GET /api/recommend-meals
+ * @description Suggests meals that match a user's nutrition needs
+ * based on height, weight, age, and goals.
+ * @query user_id (int) - The user’s ID in the database
+ */
+app.get('/api/recommend-meals', async (req, res) => {
+  try {
+    const userId = req.query.user_id;
+    if (!userId) return res.status(400).json({ error: 'Missing user_id query parameter' });
+
+    // 1 Get user info
+    const userResult = await pool.query('SELECT * FROM users WHERE user_id = $1', [userId]);
+    if (userResult.rows.length === 0)
+      return res.status(404).json({ error: 'User not found' });
+
+    const user = userResult.rows[0];
+
+    // 2️ Compute personalized nutrition targets
+    const { calories, carbs, protein, fat } = calculateNutrition(user);
+    const calorieTarget = calories / 3; // assume one meal = ~1/3 daily goal
+
+    // 3️ Smart similarity query
+    const mealQuery = `
+      SELECT *,
+        (POWER(calories - $1, 2)
+       + POWER(carbs - $2, 2)
+       + POWER(protein - $3, 2)
+       + POWER(fat - $4, 2)) AS distance
+      FROM meals
+      ORDER BY distance ASC
+      LIMIT 5;
+    `;
+
+    let meals = await pool.query(mealQuery, [
+      calorieTarget,
+      carbs / 3,
+      protein / 3,
+      fat / 3,
+    ]);
+
+    // 4️ Fallback: if no meals found, return top 5 meals by closest calories
+    if (meals.rows.length === 0) {
+      meals = await pool.query(
+        `SELECT * FROM meals
+         ORDER BY ABS(calories - $1)
+         LIMIT 5`,
+        [calorieTarget]
+      );
+    }
+
+    // 5️ Send response
+    res.json({
+      user_goals: {
+        daily: { calories, carbs, protein, fat },
+        per_meal: {
+          calories: Math.round(calorieTarget),
+          carbs: Math.round(carbs / 3),
+          protein: Math.round(protein / 3),
+          fat: Math.round(fat / 3),
+        },
+      },
+      suggested_meals: meals.rows,
+    });
+  } catch (err) {
+    console.error('Recommendation error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+
+
+// --------------- Create New User Route ---------------
+/**
+ * @route POST /api/users
+ * @description Adds a new user with personal and nutrition-related info
+ * @body {string} name - User's name
+ * @body {number} height_cm - Height in centimeters
+ * @body {number} weight_kg - Weight in kilograms
+ * @body {number} age - Age in years
+ * @body {string} gender - 'male' or 'female'
+ * @body {string} activity_level - 'low', 'moderate', or 'high'
+ * @body {string} goal - 'lose', 'maintain', or 'gain'
+ */
+app.post('/api/users', async (req, res) => {
+  try {
+    const { name, height_cm, weight_kg, age, gender, activity_level, goal } = req.body;
+
+    // 1️ Validate input
+    if (!name || !height_cm || !weight_kg || !age || !gender || !activity_level || !goal) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    // 2️ Insert user into database
+    const insertQuery = `
+      INSERT INTO users (name, height_cm, weight_kg, age, gender, activity_level, goal)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      RETURNING user_id, name, height_cm, weight_kg, age, gender, activity_level, goal;
+    `;
+
+    const result = await pool.query(insertQuery, [
+      name,
+      height_cm,
+      weight_kg,
+      age,
+      gender.toLowerCase(),
+      activity_level.toLowerCase(),
+      goal.toLowerCase(),
+    ]);
+
+    // 3️ Return newly created user info
+    res.status(201).json({
+      message: 'User successfully created',
+      user: result.rows[0],
+    });
+  } catch (err) {
+    console.error('Error creating user:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 
 
 //  --------------- Chatbot Endpoint ---------------
@@ -174,15 +313,80 @@ app.post('/api/chat', async (req, res) => {
 });
 
 
-//  --------------- Health Check Route ---------------
+// --------------- Generate Nutritional Information ---------------
 /**
- * @route GET /api/health
- * @description Basic health check for backend service status.
- * @returns {JSON} Service confirmation.
+ * @description
+ * Calculates daily nutritional recommendations based on user profile data from the frontend.
+ * The endpoint expects gender, age, weight, height, and activityLevel in the request body.
+ * It computes Basal Metabolic Rate (BMR), applies an activity multiplier to estimate
+ * Total Daily Energy Expenditure (TDEE), and returns a macronutrient breakdown.
+ *
+ * @route POST /api/calculate-nutrition
+ * @returns {Object} JSON response containing kcal, fat (g), protein (g), and carbs (g)
+ * 
+ * @example
+ * Request:
+ * {
+ *   "gender": "male",
+ *   "age": "25",
+ *   "weight": "70",
+ *   "height": "170",
+ *   "activityLevel": "moderate"
+ * }
+ *
+ * Response:
+ * {
+ *   "kcal": 2308,
+ *   "fat": 77,
+ *   "protein": 144,
+ *   "carbs": 260
+ * }
  */
-app.get('/api/health', (req, res) => {
-    // Return backend status confirmation for uptime checks
-    res.json({ status: 'ok', service: 'nourishlu-backend' });
+app.post('/api/calculate-nutrition', (req, res) => {
+    // Extract fields from frontend dropdowns
+    const { gender, age, weight, height, activityLevel } = req.body;
+
+    // Default safety checks
+    if (!gender || !age || !weight || !height || !activityLevel) {
+        return res.status(400).json({ error: "Missing required fields." });
+    }
+
+    // Convert values to numbers
+    const w = parseFloat(weight);
+    const h = parseFloat(height);
+    const a = parseFloat(age);
+
+    // Basal Metabolic Rate (BMR)
+    let bmr;
+    if (gender === "male") {
+        bmr = 10 * w + 6.25 * h - 5 * a + 5;
+    } else {
+        bmr = 10 * w + 6.25 * h - 5 * a - 161;
+    }
+
+    // Activity level multipliers
+    const activityMultipliers = {
+        sedentary: 1.2,
+        light: 1.375,
+        moderate: 1.55,
+        active: 1.725,
+        very_active: 1.9
+    };
+
+    // Total Daily Energy Expenditure (TDEE)
+    const multiplier = activityMultipliers[activityLevel] || 1.55;
+    const tdee = bmr * multiplier;
+
+    // Macronutrient breakdown
+    const resBody = {
+        kcal: Math.round(tdee),
+        fat: Math.round((tdee * 0.30) / 9),
+        protein: Math.round((tdee * 0.25) / 4),
+        carbs: Math.round((tdee * 0.45) / 4)
+    };
+
+    // Return result
+    res.json(resBody);
 });
 
 
