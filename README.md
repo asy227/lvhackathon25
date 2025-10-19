@@ -149,3 +149,11 @@ API endpoints can be tested via routes such as:
 - Production backend is managed by **PM2** for reliability and automatic restarts.  
 - The EC2 instance connects securely to the AWS RDS database using environment variables.  
 - Sensitive data is protected through environment files and AWS network security configurations.  
+
+## Deployment on AWS EC2
+
+- Hosted at: https://nourishlu.duckdns.org
+- Backend: Node.js + Express (port 3000, proxied via Nginx)
+- Frontend: React (Vite build, served from /var/www/nourishlu)
+- SSL: Let's Encrypt (certbot)
+- Deployment script: /usr/local/bin/deploy_backend.sh
