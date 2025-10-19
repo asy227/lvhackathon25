@@ -302,31 +302,43 @@ app.post('/api/calculate-nutrition', (req, res) => {
     const multiplier = activityMultipliers[activityLevel] || 1.55;
     const tdee = bmr * multiplier;
 
-    // Macronutrient breakdown
-    const resBody = {
-        kcal: Math.round(tdee),
-        fat: Math.round((tdee * 0.30) / 9),
-        protein: Math.round((tdee * 0.25) / 4),
-        carbs: Math.round((tdee * 0.45) / 4)
-    };
+    // More realistic nutrient breakdown
+    const kcal = Math.round(tdee);
+
+    // Protein based on body weight (1.6g per kg)
+    const protein = Math.round(w * 1.6);
+
+    // Fat ~25% of total calories
+    const fat = Math.round((kcal * 0.25) / 9);
+
+    // Remaining calories go to carbs
+    const remainingCalories = kcal - (protein * 4 + fat * 9);
+    const carbs = Math.round(remainingCalories / 4);
 
     // Return result
-    res.json(resBody);
+    res.json({
+        kcal,
+        protein,
+        fat,
+        carbs
+    });
 });
 
 
-//  --------------- Chatbot Endpoint ---------------
+// --------------- Chatbot API Endpoint ---------------
 /**
+ * @description
+ * Handles chat requests between the frontend and Groq API.
+ * Routes messages through a primary model and retries fallbacks if needed.
+ * Adds contextual grounding to reduce hallucinations.
+ *
  * @route POST /api/chat
- * @description Accepts a message from the frontend and sends it to the Groq API.
- *              Automatically retries using fallback models if the primary model is unavailable.
- *              Returns the model’s generated response as JSON for use in the chatbot interface.
- * @returns {JSON} Chatbot reply, success status, and model used.
+ * @returns {Object} JSON { success, modelUsed, reply }
  */
 app.post('/api/chat', async (req, res) => {
     try {
         //  Extract and validate input message from frontend
-        const { message } = req.body;  //  Extract user message from request body
+        const { message } = req.body;
         if (!message || typeof message !== 'string') {
             return res.status(400).json({ success: false, error: 'Missing or invalid "message" field.' });
         }
@@ -375,16 +387,14 @@ app.post('/api/chat', async (req, res) => {
             }
         }
 
-        //  Send final response to frontend with model info
+        //  Send final response to frontend
         console.log(`Chat completed using model: ${modelUsed}`);
         res.json({
             success: true,
             modelUsed: modelUsed,
             reply: reply
         });
-    }
-    catch (error) {
-        //  Handle unexpected runtime or API errors
+    } catch (error) {
         console.error('Chat API Error:', error);
         res.status(500).json({
             success: false,
