@@ -1,5 +1,5 @@
 .home-page {
-  position: fixed;
+  position: relative;
   top: 0;
   color: white;
   background-color: #fef3e2;
@@ -16,6 +16,10 @@
   width: calc(100% - 140px);
 }
 
+.main-content {
+  background-color: #fef3e2;
+  min-height: 100vh;
+}
 
 /* When sidebar expands */
 .sidebar.expanded ~ .main-content .home-page {
@@ -48,6 +52,7 @@
 /* Chatbot positioning */
 .chatbot-container {
   position: fixed;
+  background-color: transparent;
   right: 2rem; /* Matches your root padding */
   top: 50%;
   transform: translateY(-50%);
@@ -56,3 +61,18 @@
   z-index: 1000;
 }
 
+.piechart-nutrition-calculator {
+  width: 100%;
+  max-width: 800px;
+  margin: 2rem 0;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  padding: 20px;
+}
+
+body {
+  background-color: #fef3e2;
+  margin: 0;
+  padding: 0;
+}
