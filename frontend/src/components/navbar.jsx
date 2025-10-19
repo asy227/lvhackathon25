@@ -45,12 +45,6 @@ export default function Navbar({ onExpandChange }) {
           </NavLink>
         </li>
 
-        <li>
-          <NavLink to="/register" className={({ isActive }) => (isActive ? "active" : "")}>
-            <span className="icon">📝</span>
-            <span className="label">Register</span>
-          </NavLink>
-        </li>
       </ul>
 
       <div className="sidebar-footer">

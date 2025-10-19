@@ -66,6 +66,18 @@ app.get('/', (req, res) => {
 });
 
 
+//  --------------- Health Check Route ---------------
+/**
+ * @route GET /api/health
+ * @description Basic health check for backend service status.
+ * @returns {JSON} Service confirmation.
+ */
+app.get('/api/health', (req, res) => {
+    // Return backend status confirmation for uptime checks
+    res.json({ status: 'ok', service: 'nourishlu-backend' });
+});
+
+
 //  --------------- Database Testing Route ---------------
 /**
  * @route GET /api/db-test
@@ -299,15 +311,80 @@ app.post('/api/chat', async (req, res) => {
 });
 
 
-//  --------------- Health Check Route ---------------
+// --------------- Generate Nutritional Information ---------------
 /**
- * @route GET /api/health
- * @description Basic health check for backend service status.
- * @returns {JSON} Service confirmation.
+ * @description
+ * Calculates daily nutritional recommendations based on user profile data from the frontend.
+ * The endpoint expects gender, age, weight, height, and activityLevel in the request body.
+ * It computes Basal Metabolic Rate (BMR), applies an activity multiplier to estimate
+ * Total Daily Energy Expenditure (TDEE), and returns a macronutrient breakdown.
+ *
+ * @route POST /api/calculate-nutrition
+ * @returns {Object} JSON response containing kcal, fat (g), protein (g), and carbs (g)
+ * 
+ * @example
+ * Request:
+ * {
+ *   "gender": "male",
+ *   "age": "25",
+ *   "weight": "70",
+ *   "height": "170",
+ *   "activityLevel": "moderate"
+ * }
+ *
+ * Response:
+ * {
+ *   "kcal": 2308,
+ *   "fat": 77,
+ *   "protein": 144,
+ *   "carbs": 260
+ * }
  */
-app.get('/api/health', (req, res) => {
-    // Return backend status confirmation for uptime checks
-    res.json({ status: 'ok', service: 'nourishlu-backend' });
+app.post('/api/calculate-nutrition', (req, res) => {
+    // Extract fields from frontend dropdowns
+    const { gender, age, weight, height, activityLevel } = req.body;
+
+    // Default safety checks
+    if (!gender || !age || !weight || !height || !activityLevel) {
+        return res.status(400).json({ error: "Missing required fields." });
+    }
+
+    // Convert values to numbers
+    const w = parseFloat(weight);
+    const h = parseFloat(height);
+    const a = parseFloat(age);
+
+    // Basal Metabolic Rate (BMR)
+    let bmr;
+    if (gender === "male") {
+        bmr = 10 * w + 6.25 * h - 5 * a + 5;
+    } else {
+        bmr = 10 * w + 6.25 * h - 5 * a - 161;
+    }
+
+    // Activity level multipliers
+    const activityMultipliers = {
+        sedentary: 1.2,
+        light: 1.375,
+        moderate: 1.55,
+        active: 1.725,
+        very_active: 1.9
+    };
+
+    // Total Daily Energy Expenditure (TDEE)
+    const multiplier = activityMultipliers[activityLevel] || 1.55;
+    const tdee = bmr * multiplier;
+
+    // Macronutrient breakdown
+    const resBody = {
+        kcal: Math.round(tdee),
+        fat: Math.round((tdee * 0.30) / 9),
+        protein: Math.round((tdee * 0.25) / 4),
+        carbs: Math.round((tdee * 0.45) / 4)
+    };
+
+    // Return result
+    res.json(resBody);
 });
 
 

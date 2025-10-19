@@ -55,7 +55,7 @@ h2 {
 }
 
 .student-header-right:hover {
-  color: #518629ff; /* subtle highlight */
+  color: #376713; /* subtle highlight */
 }
 
 .campus-card-img {
@@ -74,24 +74,33 @@ h2 {
 /* ===== Dropdown Menu ===== */
 .campus-dropdown {
   position: absolute;
-  top: 70px; /* below image */
-  right: 0;
-  background-color: white;
-  color: black;
+  top: 50px; /* below image */
+  right: 30px;
+  background-color: #97c673;
+  color: white;
   border-radius: 8px;
-  padding: 0.8rem 1rem;
-  z-index: 10;
-  width: 230px;
+  padding: 0.5rem 1rem;
+  z-index: -1;
+  width: 300px;
   text-align: left;
   font-size: 1.4rem;
   animation: dropdownFade 0.25s ease;
   font-family: "Rethink Sans", sans-serif;
 }
 
-.campus-dropdown p {
+.campus-dropdown h2 {
   margin: 0.4rem 0;
   text-align: left;
+  font-size: 20px;
 }
+
+.student-header-right-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
 
 /* Simple fade-in animation for dropdown */
 @keyframes dropdownFade {
@@ -104,3 +113,4 @@ h2 {
     transform: translateY(0);
   }
 }
+
