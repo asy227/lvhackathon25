@@ -39,9 +39,9 @@ export default function Navbar({ onExpandChange }) {
         </li>
 
         <li>
-          <NavLink to="/team" className={({ isActive }) => (isActive ? "active" : "")}>
+          <NavLink to="/mealpicker" className={({ isActive }) => (isActive ? "active" : "")}>
             <span className="icon">👥</span>
-            <span className="label">Team</span>
+            <span className="label">Meal Picker</span>
           </NavLink>
         </li>
 
