@@ -67,15 +67,8 @@ const pool = new Pool({
 // ============================================================================================================
 
 //  --------------- Root Endpoint and Health Check Route ---------------
-/**
- * @route GET /
- * @description Basic route that confirms the backend is running.
- * Used for quick browser checks or EC2 uptime validation.
- * @returns {HTML} A static confirmation message.
- */
-app.get('/', (req, res) => {
-    // Send a static HTML confirmation message to confirm server is live
-    res.send('<h1>NourishLU Backend Running</h1>');
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/dist/index.html"));
 });
 
 /**
@@ -175,52 +168,77 @@ app.post('/api/users', async (req, res) => {
  * based on height, weight, age, and goals.
  * @query user_id (int) - The user’s ID in the database
  */
-app.get('/api/recommend-meals', async (req, res) => {
+app.post('/api/recommend-meals', async (req, res) => {
   try {
-    const userId = req.query.user_id;
-    if (!userId) return res.status(400).json({ error: 'Missing user_id query parameter' });
+    const { user_id, goals } = req.body;
+    if (!user_id) {
+      return res.status(400).json({ error: 'Missing user_id in request body' });
+    }
 
-    // 1 Get user info
-    const userResult = await pool.query('SELECT * FROM users WHERE user_id = $1', [userId]);
-    if (userResult.rows.length === 0)
+    console.log('Received goals:', goals);
+
+    // Step 1: Get user info
+    const userResult = await pool.query('SELECT * FROM users WHERE user_id = $1', [user_id]);
+    if (userResult.rows.length === 0) {
       return res.status(404).json({ error: 'User not found' });
+    }
 
     const user = userResult.rows[0];
 
-    // 2️ Compute personalized nutrition targets
+    // Step 2: Compute personalized nutrition targets
     const { calories, carbs, protein, fat } = calculateNutrition(user);
-    const calorieTarget = calories / 3; // assume one meal = ~1/3 daily goal
+    const calorieTarget = calories / 3;
 
-    // 3️ Smart similarity query
-    const mealQuery = `
+    // Step 3: Build query with numeric casting
+    let mealQuery = `
       SELECT *,
-        (POWER(calories - $1, 2)
-       + POWER(carbs - $2, 2)
-       + POWER(protein - $3, 2)
-       + POWER(fat - $4, 2)) AS distance
+        (
+          POWER(CAST(calories AS FLOAT) - $1, 2) +
+          POWER(CAST(carbs AS FLOAT) - $2, 2) +
+          POWER(CAST(protein AS FLOAT) - $3, 2) +
+          POWER(CAST(fat AS FLOAT) - $4, 2)
+        ) AS distance
       FROM meals
+    `;
+
+    // Step 4: Apply filters dynamically
+    const filters = [];
+    if (goals?.includes("High Protein")) filters.push("protein >= 30");
+    if (goals?.includes("Low Protein")) filters.push("protein <= 15");
+    if (goals?.includes("Low Carb")) filters.push("carbs <= 40");
+    if (goals?.includes("High Carb")) filters.push("carbs >= 80");
+    if (goals?.includes("Low Cost")) filters.push("price <= 10");
+    if (goals?.includes("High Cost")) filters.push("price >= 12");
+    if (goals?.includes("Vegetarian")) filters.push("tags ILIKE '%vegetarian%'");
+    if (goals?.includes("Vegan")) filters.push("tags ILIKE '%vegan%'");
+
+    if (filters.length > 0) {
+      mealQuery += " WHERE " + filters.join(" AND ");
+    }
+
+    mealQuery += `
       ORDER BY distance ASC
       LIMIT 5;
     `;
 
-    let meals = await pool.query(mealQuery, [
+    // Step 5: Execute query
+    const meals = await pool.query(mealQuery, [
       calorieTarget,
       carbs / 3,
       protein / 3,
       fat / 3,
     ]);
 
-    // 4️ Fallback: if no meals found, return top 5 meals by closest calories
+    // Step 6: Fallback if no matches found
     if (meals.rows.length === 0) {
-      meals = await pool.query(
-        `SELECT * FROM meals
-         ORDER BY ABS(calories - $1)
-         LIMIT 5`,
+      const fallback = await pool.query(
+        `SELECT * FROM meals ORDER BY ABS(CAST(calories AS FLOAT) - $1) LIMIT 5`,
         [calorieTarget]
       );
+      return res.json({ suggested_meals: fallback.rows });
     }
 
-    // 5️ Send response
+    // Step 7: Return successful response
     res.json({
       user_goals: {
         daily: { calories, carbs, protein, fat },
@@ -431,11 +449,20 @@ app.post('/api/chat', async (req, res) => {
 
 
 // ============================================================================================================
-// 4. Starting Backend Server
+// 4. Serving Frontend Build and Starting Server
 // ============================================================================================================
 
-//  --------------- Server Launch Configuration ---------------
+const path = require("path");
+
+// Serve static frontend assets
+app.use(express.static(path.join(__dirname, "../frontend/dist")));
+
+// Serve React app for root and other non-API routes
+app.get(/.*/, (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/dist/index.html"));
+});
+
+// Start server
 app.listen(PORT, () => {
-    // Log server startup details to console
-    console.log(`Server is listening at http://localhost:${PORT}`);
+  console.log(`Server is listening at http://localhost:${PORT}`);
 });
