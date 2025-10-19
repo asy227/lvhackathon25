@@ -67,15 +67,8 @@ const pool = new Pool({
 // ============================================================================================================
 
 //  --------------- Root Endpoint and Health Check Route ---------------
-/**
- * @route GET /
- * @description Basic route that confirms the backend is running.
- * Used for quick browser checks or EC2 uptime validation.
- * @returns {HTML} A static confirmation message.
- */
-app.get('/', (req, res) => {
-    // Send a static HTML confirmation message to confirm server is live
-    res.send('<h1>NourishLU Backend Running</h1>');
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/dist/index.html"));
 });
 
 /**
@@ -456,11 +449,20 @@ app.post('/api/chat', async (req, res) => {
 
 
 // ============================================================================================================
-// 4. Starting Backend Server
+// 4. Serving Frontend Build and Starting Server
 // ============================================================================================================
 
-//  --------------- Server Launch Configuration ---------------
+const path = require("path");
+
+// Serve static frontend assets
+app.use(express.static(path.join(__dirname, "../frontend/dist")));
+
+// Serve React app for root and other non-API routes
+app.get(/.*/, (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/dist/index.html"));
+});
+
+// Start server
 app.listen(PORT, () => {
-    // Log server startup details to console
-    console.log(`Server is listening at http://localhost:${PORT}`);
+  console.log(`Server is listening at http://localhost:${PORT}`);
 });
