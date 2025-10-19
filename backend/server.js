@@ -327,73 +327,91 @@ app.post('/api/calculate-nutrition', (req, res) => {
 
 // --------------- Chatbot API Endpoint ---------------
 /**
- * @description
- * Handles chat requests between the frontend and Groq API.
- * Routes messages through a primary model and retries fallbacks if needed.
- * Adds contextual grounding to reduce hallucinations.
- *
  * @route POST /api/chat
- * @returns {Object} JSON { success, modelUsed, reply }
+ * @description
+ * Chatbot endpoint that retrieves real meal data from the PostgreSQL database
+ * and uses it to generate concise, structured nutrition advice with Groq LLM.
+ * @returns {Object} { success, modelUsed, reply }
  */
+const LOCATION_MAP = {
+    AsasPlace: "Asa’s Place",
+    Iacocca: "Iacocca Cafe",
+    "Nest@Night": "Nest @ Night",
+    Hideaway: "Hideaway Cafe",
+    SouthMountain: "South Mountain Grill",
+    Kalamata: "Kalamata",
+    TheTalon: "The Talon",
+    LehighPub: "Lehigh Pub",
+    HisshoSushi: "Hissho Sushi",
+    MeinBowl: "Mein Bowl",
+    LeafLadle: "Leaf & Ladle",
+    PurplePita: "Purple Pita",
+    FudTruck: "Fud Truck",
+    CommonGrounds: "Common Grounds Cafe",
+    TheGrind: "The Grind Cafe",
+    TheHearth: "The Hearth"
+};
 app.post('/api/chat', async (req, res) => {
     try {
-        //  Extract and validate input message from frontend
         const { message } = req.body;
         if (!message || typeof message !== 'string') {
             return res.status(400).json({ success: false, error: 'Missing or invalid "message" field.' });
         }
 
-        //  Ensure the Groq API key is available
+        // Ensure Groq API key
         if (!process.env.GROQ_API_KEY) {
-            return res.status(400).json({ success: false, error: 'Missing Groq API key in environment.' });
+            return res.status(400).json({ success: false, error: 'Missing Groq API key.' });
         }
 
-        //  Retrieve model list from environment and fallback options
-        const primaryModel = process.env.LLM_MODEL || 'llama-3.1-8b-instant';
-        const fallbackModels = [
-            'llama-3.1-70b-versatile',
-            'mixtral-8x7b',
-            'gemma2-9b-it'
-        ];
+        // Import dependencies
+        const { generateResponse } = require('./functions/chatbot_functions');
+        const { Pool } = require('pg');
 
-        //  Attempt generation with primary model, then try fallbacks
-        let reply = '(no response)';
-        let modelUsed = primaryModel;
+        // PostgreSQL connection
+        const pool = new Pool({
+            host: process.env.DB_HOST,
+            user: process.env.DB_USER,
+            password: process.env.DB_PASS,
+            database: process.env.DB_NAME,
+            port: process.env.DB_PORT,
+            ssl: { rejectUnauthorized: false }
+        });
 
-        async function attemptChat(model) {
-            try {
-                const { generateResponse } = require('./functions/chatbot_functions');
-                return await generateResponse(message, model);
-            } catch (error) {
-                console.warn(`Chat attempt with model "${model}" failed:`, error.message);
-                return null;
-            }
-        }
+        // Query: Fetch a subset of meals for context
+        const result = await pool.query(`
+            SELECT meal_name, location, price, calories, protein, fat, carbs, tags
+            FROM meals
+            WHERE calories IS NOT NULL
+            ORDER BY RANDOM()
+            LIMIT 15;
+        `);
 
-        //  First attempt with primary model
-        let result = await attemptChat(primaryModel);
-        if (result && result !== '(no response)') {
-            reply = result;
-        } else {
-            //  Try each fallback model sequentially
-            for (const fallback of fallbackModels) {
-                console.log(`Retrying chat with fallback model: ${fallback}`);
-                result = await attemptChat(fallback);
-                if (result && result !== '(no response)') {
-                    reply = result;
-                    modelUsed = fallback;
-                    break;
-                }
-            }
-        }
+        const meals = result.rows;
 
-        //  Send final response to frontend
-        console.log(`Chat completed using model: ${modelUsed}`);
+        // Format meal data into readable text
+        const mealContext = meals.map((m, i) => {
+            const locationName = LOCATION_MAP[m.location] || m.location;  // Formatted location
+            const tagLabel = m.tags ? ` (${m.tags})` : '';
+            return `${i + 1}. ${m.meal_name} — ${locationName} — $${m.price || '?'} — `
+                + `${m.calories} kcal, P:${m.protein}g C:${m.carbs}g F:${m.fat}g${tagLabel}`;
+        }).join('\n');
+
+
+        // Build message with database context
+        const contextMessage = 
+            `Meal data currently available from the Lehigh University dining database:\n${mealContext}\n\n` +
+            `User question: ${message}\n` +
+            `Use only the above meal data when answering.`;
+
+        // Call LLM
+        const reply = await generateResponse(contextMessage);
+
         res.json({
             success: true,
-            modelUsed: modelUsed,
+            modelUsed: process.env.LLM_MODEL || 'llama-3.1-8b-instant',
             reply: reply
         });
+
     } catch (error) {
         console.error('Chat API Error:', error);
         res.status(500).json({
