@@ -1,6 +1,7 @@
 import React from "react";
 import "./App.css";
 import ChatBot from "./components/chatbot.jsx";
+import PieChart from "./components/piechart.jsx";
 
 function App() {
   return (
@@ -18,10 +19,12 @@ function App() {
       <div classname = "chatbot">
             <ChatBot />
       </div>
-    
-    </div>
 
+      <div className="piechart-nutrition-calculator">
+            <PieChart />
+      </div>
     
+    </div> 
 
   );
 }
